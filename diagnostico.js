@@ -29,3 +29,4 @@ async function run() {
   await pool.end();
 }
 run().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+// solo esto:

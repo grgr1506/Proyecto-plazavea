@@ -1182,8 +1182,8 @@
         <div class="col-md-3">
           <label class="form-label fw-semibold">Estado</label>
           <select id="usr-estado" class="form-select">
-            <option value="Activo">Activo</option>
-            <option value="Inactivo">Inactivo</option>
+            <option value="SI">Activo (SI)</option>
+            <option value="NO">Inactivo (NO)</option>
           </select>
         </div>
         <input type="hidden" id="usr-id" />
@@ -1410,7 +1410,7 @@ async function loadTable(name, buscar = '') {
       <td>${row.idempleado||''}</td>
       <td>${row.usuario}</td>
       <td><span class="badge bg-primary">${row.acceso||''}</span></td>
-      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>
+      <td><span class="badge ${row.estado?.trim()==='SI'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>
       <td>${actionBtns('usuarios', row.idusuario, row)}</td>`,
 
     compras: row => `
@@ -1422,7 +1422,7 @@ async function loadTable(name, buscar = '') {
       <td>${fmt(row.subtotal)}</td>
       <td>${fmt(row.igv)}</td>
       <td class="fw-bold">${fmt(row.total)}</td>
-      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
+      <td><span class="badge ${row.estado?.trim()==='SI'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
 
     ventas: row => `
       <td>${row.idventa}</td>
@@ -1433,7 +1433,7 @@ async function loadTable(name, buscar = '') {
       <td>${fmt(row.subtotal)}</td>
       <td>${fmt(row.igv)}</td>
       <td class="fw-bold">${fmt(row.total)}</td>
-      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
+      <td><span class="badge ${row.estado?.trim()==='SI'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
   };
 
   data.forEach(row => {
@@ -1543,7 +1543,7 @@ function editRow(section, row) {
     document.getElementById('usr-idempleado').value = row.idempleado || '';
     document.getElementById('usr-usuario').value = row.usuario;
     document.getElementById('usr-acceso').value = row.acceso || 'Usuario';
-    document.getElementById('usr-estado').value = row.estado || 'Activo';
+    document.getElementById('usr-estado').value = (row.estado||'').trim() || 'SI';
   }
 
   bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -1662,7 +1662,7 @@ async function saveUsuario() {
   const acc   = document.getElementById('usr-acceso').value;
   const est   = document.getElementById('usr-estado').value;
   if (!usr) return showAlert('El usuario es requerido', 'warning');
-  const body = { idempleado: empId, usuario: usr, password: pwd, acceso: acc, estado: est };
+  const body = { idempleado: empId, usuario: usr, pass: pwd, acceso: acc, estado: est };
   const id = document.getElementById('usr-id').value;
   const r = id ? await put(`/api/usuarios/${id}`, body)
                : await post('/api/usuarios', body);
@@ -2045,12 +2045,12 @@ async function loadConsulta(tipo) {
       tr.innerHTML = '<td>'+row.idventa+'</td><td>'+(row.fecha||'')+'</td><td>'+(row.serie||'')+'</td>'
         +'<td>'+(row.num_documento||'')+'</td><td>'+fmt(row.subtotal)+'</td>'
         +'<td>'+fmt(row.igv)+'</td><td class="fw-bold">'+fmt(row.total)+'</td>'
-        +'<td><span class="badge '+(row.estado==='Activo'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
+        +'<td><span class="badge '+(row.estado?.trim()==='SI'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
     } else {
       tr.innerHTML = '<td>'+row.idcompra+'</td><td>'+(row.fecha||'')+'</td><td>'+(row.num_documento||'')+'</td>'
         +'<td>'+(row.tipo_documento||'')+'</td><td>'+fmt(row.subtotal)+'</td>'
         +'<td>'+fmt(row.igv)+'</td><td class="fw-bold">'+fmt(row.total)+'</td>'
-        +'<td><span class="badge '+(row.estado==='Activo'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
+        +'<td><span class="badge '+(row.estado?.trim()==='SI'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
     }
     tbody.appendChild(tr);
   });
