@@ -1,0 +1,40 @@
+═══════════════════════════════════════════════════
+   PLAZA VEA - SISTEMA DE BOLETAS DE VENTAS
+   UTP - Lenguajes de Programación - Grupo 07
+═══════════════════════════════════════════════════
+
+REQUISITOS:
+  - Node.js instalado (https://nodejs.org)
+  - Conexión a internet (para Neon PostgreSQL)
+
+CÓMO EJECUTAR:
+  1. Abre una terminal (CMD o PowerShell)
+  2. Navega a esta carpeta:
+       cd "C:\Users\HP\Downloads\Proyectopoov2.1\ProyectoWeb"
+  3. Instala las dependencias (solo la primera vez):
+       npm install
+  4. Inicia el servidor:
+       npm start
+  5. Abre tu navegador en:
+       http://localhost:3000
+
+BASE DE DATOS:
+  - Host: Neon PostgreSQL (en la nube)
+  - La misma base de datos del proyecto original
+
+ESTRUCTURA DEL PROYECTO:
+  ProyectoWeb/
+  ├── server.js          ← Backend (Node.js + Express)
+  ├── package.json       ← Dependencias
+  └── public/
+      └── index.html     ← Frontend completo (SPA)
+
+MÓDULOS DISPONIBLES:
+  ✔ Login / Logout
+  ✔ Dashboard con estadísticas
+  ✔ Almacén: Productos, Categorías
+  ✔ Compras: Registro de compras + Proveedores
+  ✔ Ventas: Registro de ventas + Clientes
+  ✔ Consultas: Ventas y Compras realizadas
+  ✔ Configuración: Usuarios, Empleados
+═══════════════════════════════════════════════════

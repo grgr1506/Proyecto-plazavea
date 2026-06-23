@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plaza Vea - Sistema de Boletas de Ventas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --primary: #c0392b;
+      --primary-dark: #922b21;
+      --primary-light: #f5b7b1;
+      --sidebar-w: 240px;
+      --header-h: 60px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #e74c3c 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 380px;
+      padding: 40px 36px;
+    }
+    .login-logo { text-align: center; margin-bottom: 28px; }
+    .login-logo .icon-wrap {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--primary), #e74c3c);
+      border-radius: 50%; display: inline-flex;
+      align-items: center; justify-content: center;
+      box-shadow: 0 8px 20px rgba(192,57,43,0.4);
+      margin-bottom: 12px;
+    }
+    .login-logo h4 { font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+    .login-logo p { color: #888; font-size: .82rem; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--primary), #e74c3c);
+      border: none; color: #fff; font-weight: 600;
+      padding: 11px; border-radius: 8px; width: 100%;
+      transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .9; color: #fff; }
+
+    /* ── LAYOUT ── */
+    #app { display: none; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #cdd6e0;
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--primary), #e74c3c);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-brand span { font-weight: 700; font-size: .95rem; color: #fff; line-height: 1.2; }
+    .sidebar-brand small { font-size: .7rem; color: #8899aa; }
+
+    .sidebar-user {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #e74c3c);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; font-size: .9rem; flex-shrink: 0;
+    }
+    .user-info span { font-size: .82rem; color: #fff; display: block; font-weight: 600; }
+    .user-info small { font-size: .72rem; color: #8899aa; }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; }
+    .nav-section-title {
+      padding: 10px 20px 4px;
+      font-size: .65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: #566a7f;
+    }
+    .nav-item-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px; cursor: pointer;
+      color: #8899aa; font-size: .84rem;
+      transition: all .15s; border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+    .nav-item-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .nav-item-link.active {
+      background: rgba(192,57,43,0.2);
+      color: #fff; border-left-color: var(--primary);
+    }
+    .nav-item-link i { font-size: 1rem; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-logout {
+      display: flex; align-items: center; gap: 8px;
+      color: #8899aa; font-size: .83rem; cursor: pointer;
+      background: none; border: none; padding: 0;
+      transition: color .15s;
+    }
+    .btn-logout:hover { color: #e74c3c; }
+
+    /* Header */
+    .main-header {
+      position: fixed; left: var(--sidebar-w); right: 0; top: 0;
+      height: var(--header-h);
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; padding: 0 24px;
+      gap: 16px; z-index: 99;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    .page-title { font-weight: 700; font-size: 1.1rem; color: #1a1a2e; }
+    .header-search {
+      flex: 1; max-width: 320px;
+      display: flex; align-items: center;
+      background: #f4f6f9; border-radius: 8px;
+      padding: 0 12px; gap: 8px;
+    }
+    .header-search input {
+      border: none; background: none; outline: none;
+      font-size: .84rem; color: #333; width: 100%; padding: 7px 0;
+    }
+    .header-search i { color: #aaa; }
+
+    /* Main content */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--header-h);
+      padding: 24px;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── DASHBOARD ── */
+    .stat-card {
+      background: #fff; border-radius: 12px; padding: 20px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      display: flex; align-items: center; gap: 16px;
+      border-left: 4px solid;
+    }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .stat-info h3 { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .stat-info p { font-size: .8rem; color: #666; margin-top: 4px; }
+
+    /* ── TABLES ── */
+    .page-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .page-card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: between; gap: 12px;
+    }
+    .page-card-header h5 { font-weight: 700; margin: 0; flex: 1; }
+    .table { margin: 0; }
+    .table thead th {
+      background: #f8fafc; font-size: .78rem;
+      text-transform: uppercase; letter-spacing: .5px;
+      font-weight: 700; color: #566a7f;
+      border-bottom: 2px solid #e2e8f0; padding: 12px 16px;
+    }
+    .table tbody td { padding: 12px 16px; font-size: .85rem; vertical-align: middle; }
+    .table tbody tr:hover { background: #fafbfc; }
+
+    /* ── MODAL ── */
+    .modal-header { background: linear-gradient(135deg, var(--primary), #e74c3c); color: #fff; }
+    .modal-header .btn-close { filter: invert(1); }
+    .modal-title { font-weight: 700; }
+
+    /* ── BADGE / STATUS ── */
+    .badge-activo { background: #d4edda; color: #155724; }
+    .badge-inactivo { background: #f8d7da; color: #721c24; }
+
+    /* ── ALERTS ── */
+    #alert-container {
+      position: fixed; top: 70px; right: 20px;
+      z-index: 9999; min-width: 300px;
+    }
+
+    /* ── VENTA / COMPRA FORM ── */
+    .detalle-table th { font-size: .75rem; }
+    .detalle-table td input { font-size: .82rem; }
+
+    /* ── BUSCADOR INTERACTIVO ── */
+    .search-box { position: relative; }
+    .search-box input { border-radius: 8px; padding-left: 36px; }
+    .search-box .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
+    .search-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 500;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 240px;
+      overflow-y: auto; display: none;
+    }
+    .search-dropdown.show { display: block; }
+    .search-item {
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f4f6f9;
+      display: flex; align-items: center; gap: 10px; font-size: .84rem;
+      transition: background .1s;
+    }
+    .search-item:hover { background: #fef9f9; }
+    .search-item .si-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      background: #fdedec; display: flex; align-items: center; justify-content: center;
+      color: var(--primary); font-size: .9rem;
+    }
+    .search-item .si-name { font-weight: 600; color: #1a1a2e; }
+    .search-item .si-sub { font-size: .75rem; color: #888; }
+    .search-item .si-badge { margin-left: auto; font-size: .72rem; }
+
+    /* Producto seleccionado card */
+    .prod-selected-card {
+      background: linear-gradient(135deg, #fff5f5, #fff);
+      border: 2px solid var(--primary-light);
+      border-radius: 10px; padding: 12px 16px;
+      display: none; align-items: center; gap: 14px; margin-bottom: 12px;
+    }
+    .prod-selected-card.show { display: flex; }
+    .prod-sel-icon {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), #e74c3c);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .prod-sel-info { flex: 1; }
+    .prod-sel-info strong { display: block; font-size: .9rem; color: #1a1a2e; }
+    .prod-sel-info span { font-size: .78rem; color: #888; }
+    .qty-control { display: flex; align-items: center; gap: 0; }
+    .qty-control button {
+      width: 32px; height: 32px; border: 1px solid #ddd;
+      background: #f8fafc; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .1s; font-size: 1rem; color: #333;
+    }
+    .qty-control button:first-child { border-radius: 8px 0 0 8px; }
+    .qty-control button:last-child  { border-radius: 0 8px 8px 0; }
+    .qty-control button:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .qty-control input {
+      width: 52px; height: 32px; border: 1px solid #ddd; border-left: 0; border-right: 0;
+      text-align: center; font-size: .9rem; font-weight: 700; outline: none;
+    }
+
+    /* Detalle table mejorado */
+    .detalle-row td { vertical-align: middle !important; }
+    .detalle-row .prod-name { font-weight: 600; font-size: .84rem; }
+    .detalle-row .prod-id { font-size: .72rem; color: #aaa; }
+
+    /* Totals box */
+    .totals-box {
+      background: #f8fafc; border-radius: 8px; padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .totals-box .total-row {
+      display: flex; justify-content: space-between;
+      font-size: .9rem; padding: 3px 0;
+    }
+    .totals-box .total-row.grand {
+      font-weight: 800; font-size: 1.1rem;
+      border-top: 2px solid #e2e8f0; padding-top: 8px; margin-top: 4px;
+      color: var(--primary);
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform .3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main-content, .main-header { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LOGIN ═══════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon-wrap">
+        <i class="bi bi-shop text-white fs-2"></i>
+      </div>
+      <h4>Plaza Vea</h4>
+      <p>Sistema de Boletas de Ventas</p>
+    </div>
+    <div id="login-error" class="alert alert-danger d-none mb-3 py-2" style="font-size:.85rem"></div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size:.85rem">Usuario</label>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+        <input id="inp-usuario" type="text" class="form-control border-start-0 ps-0"
+               placeholder="Ingresa tu usuario" />
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size:.85rem">Contraseña</label>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+        <input id="inp-password" type="password" class="form-control border-start-0 ps-0"
+               placeholder="Ingresa tu contraseña" />
+        <button class="btn btn-light border" type="button" onclick="togglePass()">
+          <i id="eye-icon" class="bi bi-eye text-muted"></i>
+        </button>
+      </div>
+    </div>
+    <button class="btn btn-login" onclick="doLogin()">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar al Sistema
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ APP ════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="bi bi-shop text-white"></i></div>
+      <div>
+        <span>Plaza Vea</span>
+        <small>Sistema de Boletas de Ventas</small>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-initial">U</div>
+      <div class="user-info">
+        <span id="user-fullname">Usuario</span>
+        <small id="user-acceso">—</small>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Principal</div>
+      <a class="nav-item-link active" onclick="showSection('dashboard')">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+
+      <div class="nav-section-title">Almacén</div>
+      <a class="nav-item-link" onclick="showSection('productos')">
+        <i class="bi bi-box-seam"></i> Productos
+      </a>
+      <a class="nav-item-link" onclick="showSection('categorias')">
+        <i class="bi bi-tags"></i> Categorías
+      </a>
+
+      <div class="nav-section-title">Compras</div>
+      <a class="nav-item-link" onclick="showSection('compras')">
+        <i class="bi bi-cart-plus"></i> Compras
+      </a>
+      <a class="nav-item-link" onclick="showSection('proveedores')">
+        <i class="bi bi-truck"></i> Proveedores
+      </a>
+
+      <div class="nav-section-title">Ventas</div>
+      <a class="nav-item-link" onclick="showSection('ventas')">
+        <i class="bi bi-receipt"></i> Ventas
+      </a>
+      <a class="nav-item-link" onclick="showSection('clientes')">
+        <i class="bi bi-people"></i> Clientes
+      </a>
+
+      <div class="nav-section-title">Consultas</div>
+      <a class="nav-item-link" onclick="showSection('consulta-ventas')">
+        <i class="bi bi-graph-up"></i> Ventas Realizadas
+      </a>
+      <a class="nav-item-link" onclick="showSection('consulta-compras')">
+        <i class="bi bi-graph-down"></i> Compras Realizadas
+      </a>
+
+      <div class="nav-section-title">Configuración</div>
+      <a class="nav-item-link" onclick="showSection('usuarios')">
+        <i class="bi bi-shield-person"></i> Usuarios
+      </a>
+      <a class="nav-item-link" onclick="showSection('empleados')">
+        <i class="bi bi-person-badge"></i> Empleados
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">
+        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="main-header">
+    <span class="page-title" id="header-title">Dashboard</span>
+    <div class="header-search">
+      <i class="bi bi-search"></i>
+      <input type="text" id="global-search" placeholder="Buscar..." oninput="onSearch(this.value)" />
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <small class="text-muted d-none d-md-block" id="current-date"></small>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="sec-dashboard" class="section active">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#3498db">
+            <div class="stat-icon" style="background:#ebf5fb; color:#3498db">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="stat-productos">—</h3>
+              <p>Productos</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#27ae60">
+            <div class="stat-icon" style="background:#eafaf1; color:#27ae60">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="stat-clientes">—</h3>
+              <p>Clientes</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#e74c3c">
+            <div class="stat-icon" style="background:#fdedec; color:#e74c3c">
+              <i class="bi bi-receipt"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="stat-ventas">—</h3>
+              <p>Ventas</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#9b59b6">
+            <div class="stat-icon" style="background:#f5eef8; color:#9b59b6">
+              <i class="bi bi-cart-plus"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="stat-compras">—</h3>
+              <p>Compras</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-card p-4 text-center" style="border-top: 4px solid var(--primary)">
+        <i class="bi bi-shop" style="font-size:3rem; color:var(--primary-light)"></i>
+        <h5 class="mt-3 fw-bold" style="color:#1a1a2e">Bienvenido al Sistema de Boletas de Ventas</h5>
+        <p class="text-muted">Plaza Vea &mdash; Usa el menú lateral para navegar entre los módulos del sistema.</p>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍAS ── -->
+    <div id="sec-categorias" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-tags me-2 text-danger"></i>Categorías</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('categorias')">
+            <i class="bi bi-plus-lg me-1"></i>Nueva Categoría
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-categorias">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTOS ── -->
+    <div id="sec-productos" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-box-seam me-2 text-danger"></i>Productos</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('productos')">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Producto
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-productos">
+            <thead>
+              <tr>
+                <th>ID</th><th>Serie</th><th>Nombre</th>
+                <th>F. Ingreso</th><th>F. Vencimiento</th>
+                <th>P. Compra</th><th>P. Venta</th>
+                <th>Stock</th><th>Categoría</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROVEEDORES ── -->
+    <div id="sec-proveedores" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-truck me-2 text-danger"></i>Proveedores</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('proveedores')">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Proveedor
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-proveedores">
+            <thead>
+              <tr><th>ID</th><th>Razón Social</th><th>RUC</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLIENTES ── -->
+    <div id="sec-clientes" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-people me-2 text-danger"></i>Clientes</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('clientes')">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Cliente
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-clientes">
+            <thead>
+              <tr><th>Código</th><th>Nombres</th><th>Apellidos</th><th>DNI</th><th>RUC</th><th>Teléfono</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EMPLEADOS ── -->
+    <div id="sec-empleados" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-person-badge me-2 text-danger"></i>Empleados</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('empleados')">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Empleado
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-empleados">
+            <thead>
+              <tr><th>ID</th><th>Nombre</th><th>Apellidos</th><th>DNI</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USUARIOS ── -->
+    <div id="sec-usuarios" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-shield-person me-2 text-danger"></i>Usuarios</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="openModal('usuarios')">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Usuario
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-usuarios">
+            <thead>
+              <tr><th>ID</th><th>Empleado</th><th>Usuario</th><th>Acceso</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMPRAS ── -->
+    <div id="sec-compras" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-cart-plus me-2 text-danger"></i>Compras</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="showSection('nueva-compra')">
+            <i class="bi bi-plus-lg me-1"></i>Nueva Compra
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-compras">
+            <thead>
+              <tr><th>ID</th><th>Fecha</th><th>N° Doc</th><th>Tipo</th><th>Proveedor</th><th>Subtotal</th><th>IGV</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NUEVA COMPRA ── -->
+    <div id="sec-nueva-compra" class="section">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <button class="btn btn-outline-secondary btn-sm" onclick="showSection('compras')">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <h5 class="mb-0 fw-bold">Nueva Compra</h5>
+        <span class="badge bg-danger ms-1" id="cp-ndoc-badge">Generando N°...</span>
+      </div>
+      <div class="row g-3">
+        <!-- Columna izquierda -->
+        <div class="col-lg-8">
+
+          <!-- Proveedor -->
+          <div class="page-card p-3 mb-3">
+            <p class="fw-bold mb-2" style="font-size:.85rem"><i class="bi bi-truck me-1 text-danger"></i>Proveedor</p>
+            <div class="search-box">
+              <i class="bi bi-search search-icon"></i>
+              <input id="cp-prov-search" type="text" class="form-control form-control-sm"
+                     placeholder="Busca por nombre o RUC..." oninput="filtrarProveedores(this.value)" autocomplete="off" />
+              <div id="cp-prov-dropdown" class="search-dropdown"></div>
+            </div>
+            <div id="cp-prov-card" class="prod-selected-card mt-2">
+              <div class="prod-sel-icon"><i class="bi bi-truck"></i></div>
+              <div class="prod-sel-info">
+                <strong id="cp-prov-nombre">—</strong>
+                <span id="cp-prov-ruc">RUC: —</span>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" onclick="limpiarProvedor()"><i class="bi bi-x"></i></button>
+            </div>
+            <input type="hidden" id="cp-proveedor" />
+          </div>
+
+          <!-- Buscar producto -->
+          <div class="page-card p-3 mb-3">
+            <p class="fw-bold mb-2" style="font-size:.85rem"><i class="bi bi-box-seam me-1 text-danger"></i>Agregar Producto</p>
+            <div class="search-box mb-2">
+              <i class="bi bi-search search-icon"></i>
+              <input id="cp-prod-search" type="text" class="form-control"
+                     placeholder="Busca producto por nombre o ID..." oninput="filtrarProductosCompra(this.value)" autocomplete="off" />
+              <div id="cp-prod-dropdown" class="search-dropdown"></div>
+            </div>
+            <!-- Producto seleccionado -->
+            <div id="cp-prod-card" class="prod-selected-card">
+              <div class="prod-sel-icon"><i class="bi bi-box-seam"></i></div>
+              <div class="prod-sel-info">
+                <strong id="cp-prod-nombre">—</strong>
+                <span id="cp-prod-precio-info">Precio compra: S/ 0.00</span>
+              </div>
+              <div class="qty-control mx-3">
+                <button onclick="cpQty(-1)">−</button>
+                <input id="cp-cantidad" type="number" value="1" min="1" />
+                <button onclick="cpQty(1)">+</button>
+              </div>
+              <button class="btn btn-danger fw-bold px-3" onclick="agregarDetalleCompra()">
+                <i class="bi bi-plus-lg me-1"></i>Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla detalle -->
+          <div class="page-card p-3">
+            <div class="d-flex align-items-center mb-2">
+              <h6 class="mb-0 fw-bold">Productos en la Compra</h6>
+              <span class="badge bg-secondary ms-2" id="cp-count">0 items</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm detalle-table mb-0" id="tbl-detalle-compra">
+                <thead>
+                  <tr><th>#</th><th>Producto</th><th style="width:130px">Cantidad</th><th>P. Compra</th><th>Total</th><th></th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="cp-empty" class="text-center py-4 text-muted" style="font-size:.85rem">
+              <i class="bi bi-cart-x" style="font-size:2rem; display:block; margin-bottom:6px; opacity:.3"></i>
+              Busca y agrega productos arriba
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: resumen -->
+        <div class="col-lg-4">
+          <div class="page-card p-4 mb-3">
+            <h6 class="fw-bold mb-3">Datos del Documento</h6>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">Tipo Documento</label>
+              <select id="cp-tipo" class="form-select form-select-sm">
+                <option>Factura</option><option>Boleta</option><option>Nota de Pedido</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">N° Documento</label>
+              <input id="cp-ndoc" type="text" class="form-control form-control-sm" readonly style="background:#f8fafc" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">Fecha</label>
+              <input id="cp-fecha" type="date" class="form-control form-control-sm" />
+            </div>
+            <div>
+              <label class="form-label fw-semibold" style="font-size:.8rem">Estado</label>
+              <select id="cp-estado" class="form-select form-select-sm">
+                <option>Activo</option><option>Anulado</option>
+              </select>
+            </div>
+          </div>
+          <div class="page-card p-4">
+            <h6 class="fw-bold mb-3">Resumen</h6>
+            <div class="totals-box">
+              <div class="total-row"><span>Subtotal:</span><span id="cp-subtotal">S/ 0.00</span></div>
+              <div class="total-row"><span>IGV (18%):</span><span id="cp-igv">S/ 0.00</span></div>
+              <div class="total-row grand"><span>TOTAL:</span><span id="cp-total">S/ 0.00</span></div>
+            </div>
+            <button class="btn btn-danger w-100 mt-3 fw-bold py-2" onclick="guardarCompra()">
+              <i class="bi bi-check-circle me-2"></i>Registrar Compra
+            </button>
+            <button class="btn btn-outline-secondary w-100 mt-2 btn-sm" onclick="showSection('compras')">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VENTAS ── -->
+    <div id="sec-ventas" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-receipt me-2 text-danger"></i>Ventas</h5>
+          <button class="btn btn-danger btn-sm ms-auto" onclick="showSection('nueva-venta')">
+            <i class="bi bi-plus-lg me-1"></i>Nueva Venta
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-ventas">
+            <thead>
+              <tr><th>ID</th><th>Fecha</th><th>Serie</th><th>N° Doc</th><th>Cliente</th><th>Subtotal</th><th>IGV</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NUEVA VENTA ── -->
+    <div id="sec-nueva-venta" class="section">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <button class="btn btn-outline-secondary btn-sm" onclick="showSection('ventas')">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <h5 class="mb-0 fw-bold">Nueva Venta</h5>
+        <span class="badge bg-danger ms-1" id="vt-ndoc-badge">Generando N°...</span>
+      </div>
+      <div class="row g-3">
+        <!-- Columna izquierda -->
+        <div class="col-lg-8">
+
+          <!-- Cliente -->
+          <div class="page-card p-3 mb-3">
+            <p class="fw-bold mb-2" style="font-size:.85rem"><i class="bi bi-person me-1 text-danger"></i>Cliente</p>
+            <div class="search-box">
+              <i class="bi bi-search search-icon"></i>
+              <input id="vt-cli-search" type="text" class="form-control form-control-sm"
+                     placeholder="Busca por nombre o DNI..." oninput="filtrarClientes(this.value)" autocomplete="off" />
+              <div id="vt-cli-dropdown" class="search-dropdown"></div>
+            </div>
+            <div id="vt-cli-card" class="prod-selected-card mt-2">
+              <div class="prod-sel-icon" style="background:linear-gradient(135deg,#27ae60,#2ecc71)"><i class="bi bi-person-fill"></i></div>
+              <div class="prod-sel-info">
+                <strong id="vt-cli-nombre">—</strong>
+                <span id="vt-cli-dni">DNI: —</span>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary" onclick="limpiarCliente()"><i class="bi bi-x"></i></button>
+            </div>
+            <input type="hidden" id="vt-cliente" />
+          </div>
+
+          <!-- Buscar producto -->
+          <div class="page-card p-3 mb-3">
+            <p class="fw-bold mb-2" style="font-size:.85rem"><i class="bi bi-box-seam me-1 text-danger"></i>Agregar Producto</p>
+            <div class="search-box mb-2">
+              <i class="bi bi-search search-icon"></i>
+              <input id="vt-prod-search" type="text" class="form-control"
+                     placeholder="Busca producto por nombre o ID..." oninput="filtrarProductosVenta(this.value)" autocomplete="off" />
+              <div id="vt-prod-dropdown" class="search-dropdown"></div>
+            </div>
+            <!-- Producto seleccionado -->
+            <div id="vt-prod-card" class="prod-selected-card">
+              <div class="prod-sel-icon"><i class="bi bi-box-seam"></i></div>
+              <div class="prod-sel-info">
+                <strong id="vt-prod-nombre">—</strong>
+                <span id="vt-prod-precio-info">Precio venta: S/ 0.00</span>
+              </div>
+              <div class="qty-control mx-3">
+                <button onclick="vtQty(-1)">−</button>
+                <input id="vt-cantidad" type="number" value="1" min="1" />
+                <button onclick="vtQty(1)">+</button>
+              </div>
+              <button class="btn btn-danger fw-bold px-3" onclick="agregarDetalleVenta()">
+                <i class="bi bi-plus-lg me-1"></i>Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla detalle -->
+          <div class="page-card p-3">
+            <div class="d-flex align-items-center mb-2">
+              <h6 class="mb-0 fw-bold">Productos en la Venta</h6>
+              <span class="badge bg-secondary ms-2" id="vt-count">0 items</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm detalle-table mb-0" id="tbl-detalle-venta">
+                <thead>
+                  <tr><th>#</th><th>Producto</th><th style="width:130px">Cantidad</th><th>P. Venta</th><th>Total</th><th></th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="vt-empty" class="text-center py-4 text-muted" style="font-size:.85rem">
+              <i class="bi bi-cart-x" style="font-size:2rem; display:block; margin-bottom:6px; opacity:.3"></i>
+              Busca y agrega productos arriba
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: resumen -->
+        <div class="col-lg-4">
+
+          <div class="page-card p-4 mb-3">
+            <h6 class="fw-bold mb-3">Datos del Documento</h6>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">Tipo Documento</label>
+              <select id="vt-tipo" class="form-select form-select-sm" onchange="actualizarSerieVenta()">
+                <option value="Boleta">Boleta</option>
+                <option value="Factura">Factura</option>
+                <option value="Ticket">Ticket</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">Serie</label>
+              <input id="vt-serie" type="text" class="form-control form-control-sm" readonly style="background:#f8fafc" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">N° Documento</label>
+              <input id="vt-ndoc" type="text" class="form-control form-control-sm" readonly style="background:#f8fafc" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" style="font-size:.8rem">Fecha</label>
+              <input id="vt-fecha" type="date" class="form-control form-control-sm" />
+            </div>
+            <div>
+              <label class="form-label fw-semibold" style="font-size:.8rem">Estado</label>
+              <select id="vt-estado" class="form-select form-select-sm">
+                <option>Activo</option><option>Anulado</option>
+              </select>
+            </div>
+          </div>
+          <div class="page-card p-4">
+            <h6 class="fw-bold mb-3">Resumen</h6>
+            <div class="totals-box">
+              <div class="total-row"><span>Subtotal:</span><span id="vt-subtotal">S/ 0.00</span></div>
+              <div class="total-row"><span>IGV (18%):</span><span id="vt-igv">S/ 0.00</span></div>
+              <div class="total-row grand"><span>TOTAL:</span><span id="vt-total">S/ 0.00</span></div>
+            </div>
+            <button class="btn btn-danger w-100 mt-3 fw-bold py-2" onclick="guardarVenta()">
+              <i class="bi bi-check-circle me-2"></i>Registrar Venta
+            </button>
+            <button class="btn btn-outline-secondary w-100 mt-2 btn-sm" onclick="showSection('ventas')">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONSULTA VENTAS ── -->
+    <div id="sec-consulta-ventas" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-graph-up me-2 text-danger"></i>Ventas Realizadas</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-consulta-ventas">
+            <thead>
+              <tr><th>ID</th><th>Fecha</th><th>Serie</th><th>N° Doc</th><th>Subtotal</th><th>IGV</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONSULTA COMPRAS ── -->
+    <div id="sec-consulta-compras" class="section">
+      <div class="page-card">
+        <div class="page-card-header">
+          <h5><i class="bi bi-graph-down me-2 text-danger"></i>Compras Realizadas</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover" id="tbl-consulta-compras">
+            <thead>
+              <tr><th>ID</th><th>Fecha</th><th>N° Doc</th><th>Tipo</th><th>Subtotal</th><th>IGV</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── ALERT CONTAINER ── -->
+<div id="alert-container"></div>
+
+<!-- ═══════════════════════ MODALS ═══════════════════════════════════════════ -->
+
+<!-- Modal Categoría -->
+<div class="modal fade" id="modal-categorias" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-tags me-2"></i>Categoría</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cat-id" />
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nombre de Categoría</label>
+        <input id="cat-nombre" type="text" class="form-control" placeholder="Ej: Electrónica" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveCategoria()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal Producto -->
+<div class="modal fade" id="modal-productos" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Producto</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">ID Producto</label>
+          <input id="prod-id" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Serie</label>
+          <input id="prod-serie" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Categoría</label>
+          <select id="prod-categoria" class="form-select"></select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Nombre del Producto</label>
+          <input id="prod-nombre" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Fecha Ingreso</label>
+          <input id="prod-fingreso" type="date" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Fecha Vencimiento</label>
+          <input id="prod-fvencimiento" type="date" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">P. Compra</label>
+          <input id="prod-pcompra" type="number" step="0.01" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">P. Venta</label>
+          <input id="prod-pventa" type="number" step="0.01" class="form-control" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveProducto()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal Proveedor -->
+<div class="modal fade" id="modal-proveedores" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-truck me-2"></i>Proveedor</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">ID Proveedor</label>
+          <input id="prov-id" type="text" class="form-control" />
+        </div>
+        <div class="col-md-7">
+          <label class="form-label fw-semibold">Razón Social</label>
+          <input id="prov-razonsocial" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">RUC</label>
+          <input id="prov-ruc" type="text" class="form-control" maxlength="11" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Teléfono</label>
+          <input id="prov-telefono" type="text" class="form-control" />
+        </div>
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Dirección</label>
+          <input id="prov-direccion" type="text" class="form-control" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveProveedor()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal fade" id="modal-clientes" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-people me-2"></i>Cliente</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Código</label>
+          <input id="cli-codigo" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Nombres</label>
+          <input id="cli-nombres" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Apellidos</label>
+          <input id="cli-apellidos" type="text" class="form-control" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">DNI</label>
+          <input id="cli-dni" type="text" class="form-control" maxlength="8" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">RUC</label>
+          <input id="cli-ruc" type="text" class="form-control" maxlength="11" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Edad</label>
+          <input id="cli-edad" type="number" class="form-control" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Sexo</label>
+          <select id="cli-sexo" class="form-select">
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Teléfono</label>
+          <input id="cli-telefono" type="text" class="form-control" />
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Dirección</label>
+          <input id="cli-direccion" type="text" class="form-control" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveCliente()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal Empleado -->
+<div class="modal fade" id="modal-empleados" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-person-badge me-2"></i>Empleado</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">ID Empleado</label>
+          <input id="emp-id" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Nombre</label>
+          <input id="emp-nombre" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Apellidos</label>
+          <input id="emp-apellidos" type="text" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">DNI</label>
+          <input id="emp-dni" type="text" class="form-control" maxlength="8" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Teléfono</label>
+          <input id="emp-telefono" type="text" class="form-control" />
+        </div>
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Dirección</label>
+          <input id="emp-direccion" type="text" class="form-control" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveEmpleado()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal Usuario -->
+<div class="modal fade" id="modal-usuarios" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-shield-person me-2"></i>Usuario</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">ID Empleado</label>
+          <input id="usr-idempleado" type="text" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Usuario</label>
+          <input id="usr-usuario" type="text" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Contraseña</label>
+          <input id="usr-password" type="password" class="form-control" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Acceso</label>
+          <select id="usr-acceso" class="form-select">
+            <option value="Admin">Admin</option>
+            <option value="Usuario">Usuario</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Estado</label>
+          <select id="usr-estado" class="form-select">
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <input type="hidden" id="usr-id" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="saveUsuario()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+// ═══════════════════════ STATE ═══════════════════════════════════════════════
+let currentSection = 'dashboard';
+let editingId = null;
+let detalleCompra = [];
+let detalleVenta = [];
+let productosCache = [];
+let sessionUser = null;
+const IGV_RATE = 0.18;
+
+// ═══════════════════════ UTILS ═══════════════════════════════════════════════
+const api = async (method, url, body) => {
+  const opts = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (r.status === 401) { showLogin(); return null; }
+  return r.json();
+};
+const get  = url => api('GET', url);
+const post = (url, body) => api('POST', url, body);
+const put  = (url, body) => api('PUT', url, body);
+const del  = url => api('DELETE', url);
+
+function showAlert(msg, type = 'success') {
+  const id = 'alert-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = `alert alert-${type} alert-dismissible fade show shadow`;
+  el.style.cssText = 'font-size:.85rem; border-radius:10px;';
+  el.innerHTML = `${msg}<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>`;
+  document.getElementById('alert-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function fmt(n) { return 'S/ ' + parseFloat(n || 0).toFixed(2); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ═══════════════════════ AUTH ════════════════════════════════════════════════
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+function togglePass() {
+  const inp = document.getElementById('inp-password');
+  const icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'bi bi-eye-slash text-muted'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye text-muted'; }
+}
+
+async function doLogin() {
+  const usuario = document.getElementById('inp-usuario').value.trim();
+  const password = document.getElementById('inp-password').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (!usuario || !password) { errEl.textContent = 'Completa todos los campos.'; errEl.classList.remove('d-none'); return; }
+  errEl.classList.add('d-none');
+  const data = await post('/api/login', { usuario, password });
+  if (!data) return;
+  if (data.ok) {
+    sessionUser = data.user;
+    setUserInfo(data.user);
+    showApp();
+    loadDashboard();
+    loadProductosCache();
+  } else {
+    errEl.textContent = data.error || 'Acceso denegado';
+    errEl.classList.remove('d-none');
+  }
+}
+
+async function doLogout() {
+  await post('/api/logout');
+  showLogin();
+  document.getElementById('inp-usuario').value = '';
+  document.getElementById('inp-password').value = '';
+}
+
+function setUserInfo(user) {
+  const nombre = (user.nombre || user.usuario || 'U');
+  document.getElementById('user-initial').textContent = nombre[0].toUpperCase();
+  document.getElementById('user-fullname').textContent = `${user.nombre || ''} ${user.apellidos || ''}`.trim() || user.usuario;
+  document.getElementById('user-acceso').textContent = user.acceso || '—';
+}
+
+// Enter key on login
+document.getElementById('inp-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('inp-usuario').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ═══════════════════════ NAV ═════════════════════════════════════════════════
+const sectionTitles = {
+  dashboard: 'Dashboard',
+  categorias: 'Categorías', productos: 'Productos',
+  proveedores: 'Proveedores', clientes: 'Clientes',
+  empleados: 'Empleados', usuarios: 'Usuarios',
+  compras: 'Compras', 'nueva-compra': 'Nueva Compra',
+  ventas: 'Ventas', 'nueva-venta': 'Nueva Venta',
+  'consulta-ventas': 'Ventas Realizadas', 'consulta-compras': 'Compras Realizadas',
+};
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item-link').forEach(a => a.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-item-link').forEach(a => {
+    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(`'${name}'`)) a.classList.add('active');
+  });
+  document.getElementById('header-title').textContent = sectionTitles[name] || name;
+  document.getElementById('global-search').value = '';
+  currentSection = name;
+  loadSection(name);
+}
+
+function loadSection(name) {
+  switch(name) {
+    case 'dashboard': loadDashboard(); break;
+    case 'categorias': loadTable('categorias'); break;
+    case 'productos': loadTable('productos'); break;
+    case 'proveedores': loadTable('proveedores'); break;
+    case 'clientes': loadTable('clientes'); break;
+    case 'empleados': loadTable('empleados'); break;
+    case 'usuarios': loadTable('usuarios'); break;
+    case 'compras': loadTable('compras'); break;
+    case 'ventas': loadTable('ventas'); break;
+    case 'nueva-compra': initNuevaCompra(); break;
+    case 'nueva-venta': initNuevaVenta(); break;
+    case 'consulta-ventas': loadConsulta('ventas'); break;
+    case 'consulta-compras': loadConsulta('compras'); break;
+  }
+}
+
+function onSearch(val) {
+  const maps = {
+    categorias: 'categorias', productos: 'productos',
+    proveedores: 'proveedores', clientes: 'clientes',
+    empleados: 'empleados', usuarios: 'usuarios',
+    compras: 'compras', ventas: 'ventas',
+  };
+  if (maps[currentSection]) loadTable(maps[currentSection], val);
+}
+
+// ═══════════════════════ DASHBOARD ═══════════════════════════════════════════
+async function loadDashboard() {
+  const d = await get('/api/dashboard');
+  if (!d) return;
+  document.getElementById('stat-productos').textContent = d.productos;
+  document.getElementById('stat-clientes').textContent = d.clientes;
+  document.getElementById('stat-ventas').textContent = d.ventas;
+  document.getElementById('stat-compras').textContent = d.compras;
+}
+
+// ═══════════════════════ TABLES ══════════════════════════════════════════════
+async function loadTable(name, buscar = '') {
+  const data = await get(`/api/${name}?buscar=${encodeURIComponent(buscar)}`);
+  if (!data) return;
+  const tbody = document.querySelector(`#tbl-${name} tbody`);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const renderers = {
+    categorias: row => `
+      <td>${row.idcategoria}</td>
+      <td>${row.ncategoria}</td>
+      <td>${actionBtns('categorias', row.idcategoria, row)}</td>`,
+
+    productos: row => `
+      <td>${row.idproducto}</td>
+      <td>${row.serie||''}</td>
+      <td>${row.nombre}</td>
+      <td>${row.f_ingreso||''}</td>
+      <td>${row.f_vencimiento||''}</td>
+      <td>${fmt(row.p_compra)}</td>
+      <td>${fmt(row.p_venta)}</td>
+      <td><span class="badge bg-info text-dark">${row.cantidad||0}</span></td>
+      <td>${row.ncategoria||''}</td>
+      <td>${actionBtns('productos', row.idproducto, row)}</td>`,
+
+    proveedores: row => `
+      <td>${row.idprovedor}</td>
+      <td>${row.razonsocial}</td>
+      <td>${row.ruc||''}</td>
+      <td>${row.telefono||''}</td>
+      <td>${row.direccion||''}</td>
+      <td>${actionBtns('proveedores', row.idprovedor, row)}</td>`,
+
+    clientes: row => `
+      <td>${row.codigo}</td>
+      <td>${row.nombres}</td>
+      <td>${row.apellidos}</td>
+      <td>${row.dni||''}</td>
+      <td>${row.ruc||''}</td>
+      <td>${row.telefono||''}</td>
+      <td>${actionBtns('clientes', row.codigo, row)}</td>`,
+
+    empleados: row => `
+      <td>${row.idempleado}</td>
+      <td>${row.nombre}</td>
+      <td>${row.apellidos}</td>
+      <td>${row.dni||''}</td>
+      <td>${row.telefono||''}</td>
+      <td>${row.direccion||''}</td>
+      <td>${actionBtns('empleados', row.idempleado, row)}</td>`,
+
+    usuarios: row => `
+      <td>${row.idusuario}</td>
+      <td>${row.idempleado||''}</td>
+      <td>${row.usuario}</td>
+      <td><span class="badge bg-primary">${row.acceso||''}</span></td>
+      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>
+      <td>${actionBtns('usuarios', row.idusuario, row)}</td>`,
+
+    compras: row => `
+      <td>${row.idcompra}</td>
+      <td>${row.fecha||''}</td>
+      <td>${row.num_documento||''}</td>
+      <td>${row.tipo_documento||''}</td>
+      <td>${row.idproveedor||''}</td>
+      <td>${fmt(row.subtotal)}</td>
+      <td>${fmt(row.igv)}</td>
+      <td class="fw-bold">${fmt(row.total)}</td>
+      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
+
+    ventas: row => `
+      <td>${row.idventa}</td>
+      <td>${row.fecha||''}</td>
+      <td>${row.serie||''}</td>
+      <td>${row.num_documento||''}</td>
+      <td>${row.idcliente||''}</td>
+      <td>${fmt(row.subtotal)}</td>
+      <td>${fmt(row.igv)}</td>
+      <td class="fw-bold">${fmt(row.total)}</td>
+      <td><span class="badge ${row.estado==='Activo'?'badge-activo':'badge-inactivo'}">${row.estado||''}</span></td>`,
+  };
+
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = renderers[name] ? renderers[name](row) : '';
+    tbody.appendChild(tr);
+  });
+}
+
+function actionBtns(section, id, row) {
+  const rowJson = encodeURIComponent(JSON.stringify(row));
+  return `
+    <div class="d-flex gap-1">
+      <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick='editRow("${section}", ${JSON.stringify(row)})'>
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteRow('${section}','${id}')">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>`;
+}
+
+// ═══════════════════════ MODALS ═══════════════════════════════════════════════
+function openModal(section) {
+  editingId = null;
+  clearModal(section);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-' + section)).show();
+}
+
+function clearModal(section) {
+  const fields = {
+    categorias: ['cat-id','cat-nombre'],
+    productos: ['prod-id','prod-serie','prod-nombre','prod-fingreso','prod-fvencimiento','prod-pcompra','prod-pventa'],
+    proveedores: ['prov-id','prov-razonsocial','prov-ruc','prov-telefono','prov-direccion'],
+    clientes: ['cli-codigo','cli-nombres','cli-apellidos','cli-dni','cli-ruc','cli-edad','cli-telefono','cli-direccion'],
+    empleados: ['emp-id','emp-nombre','emp-apellidos','emp-dni','emp-telefono','emp-direccion'],
+    usuarios: ['usr-id','usr-idempleado','usr-usuario','usr-password'],
+  };
+  (fields[section] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  if (section === 'productos') loadCategoriasSelect();
+}
+
+async function loadCategoriasSelect() {
+  const data = await get('/api/categorias?buscar=');
+  const sel = document.getElementById('prod-categoria');
+  if (!sel || !data) return;
+  sel.innerHTML = data.map(c => `<option value="${c.idcategoria}">${c.ncategoria}</option>`).join('');
+}
+
+function editRow(section, row) {
+  editingId = null;
+  const modalEl = document.getElementById('modal-' + section);
+  if (!modalEl) return;
+
+  if (section === 'categorias') {
+    editingId = row.idcategoria;
+    document.getElementById('cat-id').value = row.idcategoria;
+    document.getElementById('cat-nombre').value = row.ncategoria;
+  } else if (section === 'productos') {
+    editingId = row.idproducto;
+    loadCategoriasSelect().then(() => {
+      document.getElementById('prod-id').value = row.idproducto;
+      document.getElementById('prod-id').readOnly = true;
+      document.getElementById('prod-serie').value = row.serie || '';
+      document.getElementById('prod-nombre').value = row.nombre;
+      document.getElementById('prod-fingreso').value = row.f_ingreso || '';
+      document.getElementById('prod-fvencimiento').value = row.f_vencimiento || '';
+      document.getElementById('prod-pcompra').value = row.p_compra || '';
+      document.getElementById('prod-pventa').value = row.p_venta || '';
+      document.getElementById('prod-categoria').value = row.idcategoria || '';
+    });
+  } else if (section === 'proveedores') {
+    editingId = row.idprovedor;
+    document.getElementById('prov-id').value = row.idprovedor;
+    document.getElementById('prov-id').readOnly = true;
+    document.getElementById('prov-razonsocial').value = row.razonsocial;
+    document.getElementById('prov-ruc').value = row.ruc || '';
+    document.getElementById('prov-telefono').value = row.telefono || '';
+    document.getElementById('prov-direccion').value = row.direccion || '';
+  } else if (section === 'clientes') {
+    editingId = row.codigo;
+    document.getElementById('cli-codigo').value = row.codigo;
+    document.getElementById('cli-codigo').readOnly = true;
+    document.getElementById('cli-nombres').value = row.nombres;
+    document.getElementById('cli-apellidos').value = row.apellidos;
+    document.getElementById('cli-dni').value = row.dni || '';
+    document.getElementById('cli-ruc').value = row.ruc || '';
+    document.getElementById('cli-edad').value = row.edad || '';
+    document.getElementById('cli-sexo').value = row.sexo || 'M';
+    document.getElementById('cli-telefono').value = row.telefono || '';
+    document.getElementById('cli-direccion').value = row.direccion || '';
+  } else if (section === 'empleados') {
+    editingId = row.idempleado;
+    document.getElementById('emp-id').value = row.idempleado;
+    document.getElementById('emp-id').readOnly = true;
+    document.getElementById('emp-nombre').value = row.nombre;
+    document.getElementById('emp-apellidos').value = row.apellidos;
+    document.getElementById('emp-dni').value = row.dni || '';
+    document.getElementById('emp-telefono').value = row.telefono || '';
+    document.getElementById('emp-direccion').value = row.direccion || '';
+  } else if (section === 'usuarios') {
+    editingId = row.idusuario;
+    document.getElementById('usr-id').value = row.idusuario;
+    document.getElementById('usr-idempleado').value = row.idempleado || '';
+    document.getElementById('usr-usuario').value = row.usuario;
+    document.getElementById('usr-acceso').value = row.acceso || 'Usuario';
+    document.getElementById('usr-estado').value = row.estado || 'Activo';
+  }
+
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+
+async function deleteRow(section, id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const r = await del(`/api/${section}/${id}`);
+  if (r && r.ok) { showAlert('Registro eliminado correctamente'); loadTable(section); }
+  else showAlert(r?.error || 'Error al eliminar', 'danger');
+}
+
+// ═══════════════════════ SAVE FUNCTIONS ═══════════════════════════════════════
+async function saveCategoria() {
+  const nombre = document.getElementById('cat-nombre').value.trim();
+  if (!nombre) return showAlert('Ingresa el nombre de la categoría', 'warning');
+  const id = editingId;
+  const r = id ? await put(`/api/categorias/${id}`, { ncategoria: nombre })
+               : await post('/api/categorias', { ncategoria: nombre });
+  if (r?.ok) {
+    showAlert(id ? 'Categoría actualizada' : 'Categoría registrada');
+    bootstrap.Modal.getInstance(document.getElementById('modal-categorias')).hide();
+    loadTable('categorias');
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+async function saveProducto() {
+  const id    = document.getElementById('prod-id').value.trim();
+  const serie = document.getElementById('prod-serie').value.trim();
+  const nombre = document.getElementById('prod-nombre').value.trim();
+  const fi    = document.getElementById('prod-fingreso').value;
+  const fv    = document.getElementById('prod-fvencimiento').value;
+  const pv    = document.getElementById('prod-pventa').value;
+  const pc    = document.getElementById('prod-pcompra').value;
+  const cat   = document.getElementById('prod-categoria').value;
+  if (!id || !nombre) return showAlert('ID y Nombre son requeridos', 'warning');
+  const body = { idproducto: id, serie, nombre, f_ingreso: fi, f_vencimiento: fv, p_venta: pv, p_compra: pc, idcategoria: cat };
+  const r = editingId ? await put(`/api/productos/${editingId}`, body)
+                      : await post('/api/productos', body);
+  if (r?.ok) {
+    showAlert(editingId ? 'Producto actualizado' : 'Producto registrado');
+    bootstrap.Modal.getInstance(document.getElementById('modal-productos')).hide();
+    loadTable('productos');
+    loadProductosCache();
+    document.getElementById('prod-id').readOnly = false;
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+async function saveProveedor() {
+  const id  = document.getElementById('prov-id').value.trim();
+  const rs  = document.getElementById('prov-razonsocial').value.trim();
+  const ruc = document.getElementById('prov-ruc').value.trim();
+  const tel = document.getElementById('prov-telefono').value.trim();
+  const dir = document.getElementById('prov-direccion').value.trim();
+  if (!id || !rs) return showAlert('ID y Razón Social son requeridos', 'warning');
+  const body = { idprovedor: id, razonsocial: rs, ruc, telefono: tel, direccion: dir };
+  const r = editingId ? await put(`/api/proveedores/${editingId}`, body)
+                      : await post('/api/proveedores', body);
+  if (r?.ok) {
+    showAlert(editingId ? 'Proveedor actualizado' : 'Proveedor registrado');
+    bootstrap.Modal.getInstance(document.getElementById('modal-proveedores')).hide();
+    loadTable('proveedores');
+    document.getElementById('prov-id').readOnly = false;
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+async function saveCliente() {
+  const cod = document.getElementById('cli-codigo').value.trim();
+  const nom = document.getElementById('cli-nombres').value.trim();
+  const ap  = document.getElementById('cli-apellidos').value.trim();
+  if (!cod || !nom) return showAlert('Código y Nombres son requeridos', 'warning');
+  const body = {
+    codigo: cod, nombres: nom, apellidos: ap,
+    dni: document.getElementById('cli-dni').value.trim(),
+    ruc: document.getElementById('cli-ruc').value.trim(),
+    edad: document.getElementById('cli-edad').value || 0,
+    sexo: document.getElementById('cli-sexo').value,
+    telefono: document.getElementById('cli-telefono').value.trim(),
+    direccion: document.getElementById('cli-direccion').value.trim(),
+  };
+  const r = editingId ? await put(`/api/clientes/${editingId}`, body)
+                      : await post('/api/clientes', body);
+  if (r?.ok) {
+    showAlert(editingId ? 'Cliente actualizado' : 'Cliente registrado');
+    bootstrap.Modal.getInstance(document.getElementById('modal-clientes')).hide();
+    loadTable('clientes');
+    document.getElementById('cli-codigo').readOnly = false;
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+async function saveEmpleado() {
+  const id   = document.getElementById('emp-id').value.trim();
+  const nom  = document.getElementById('emp-nombre').value.trim();
+  const ap   = document.getElementById('emp-apellidos').value.trim();
+  if (!id || !nom) return showAlert('ID y Nombre son requeridos', 'warning');
+  const body = {
+    idempleado: id, nombre: nom, apellidos: ap,
+    dni: document.getElementById('emp-dni').value.trim(),
+    telefono: document.getElementById('emp-telefono').value.trim(),
+    direccion: document.getElementById('emp-direccion').value.trim(),
+  };
+  const r = editingId ? await put(`/api/empleados/${editingId}`, body)
+                      : await post('/api/empleados', body);
+  if (r?.ok) {
+    showAlert(editingId ? 'Empleado actualizado' : 'Empleado registrado');
+    bootstrap.Modal.getInstance(document.getElementById('modal-empleados')).hide();
+    loadTable('empleados');
+    document.getElementById('emp-id').readOnly = false;
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+async function saveUsuario() {
+  const empId = document.getElementById('usr-idempleado').value.trim();
+  const usr   = document.getElementById('usr-usuario').value.trim();
+  const pwd   = document.getElementById('usr-password').value.trim();
+  const acc   = document.getElementById('usr-acceso').value;
+  const est   = document.getElementById('usr-estado').value;
+  if (!usr) return showAlert('El usuario es requerido', 'warning');
+  const body = { idempleado: empId, usuario: usr, password: pwd, acceso: acc, estado: est };
+  const id = document.getElementById('usr-id').value;
+  const r = id ? await put(`/api/usuarios/${id}`, body)
+               : await post('/api/usuarios', body);
+  if (r?.ok) {
+    showAlert(id ? 'Usuario actualizado' : 'Usuario registrado');
+    bootstrap.Modal.getInstance(document.getElementById('modal-usuarios')).hide();
+    loadTable('usuarios');
+  } else showAlert(r?.error || 'Error', 'danger');
+}
+
+// ═══════════════════════ COMPRAS - INTERACTIVO ════════════════════════════════
+let cpProductoActual = null;
+let proveedoresCache = [];
+
+async function initNuevaCompra() {
+  detalleCompra = [];
+  cpProductoActual = null;
+  renderDetalleCompra();
+  document.getElementById('cp-fecha').value = today();
+  document.getElementById('cp-prod-card').classList.remove('show');
+  document.getElementById('cp-prov-card').classList.remove('show');
+  document.getElementById('cp-prod-search').value = '';
+  document.getElementById('cp-prov-search').value = '';
+  document.getElementById('cp-proveedor').value = '';
+
+  // Auto-generar N° documento
+  const ndoc = 'C-' + String(Date.now()).slice(-6);
+  document.getElementById('cp-ndoc').value = ndoc;
+  document.getElementById('cp-ndoc-badge').textContent = ndoc;
+
+  // Cargar cache de proveedores
+  const provs = await get('/api/proveedores?buscar=');
+  if (provs) proveedoresCache = provs;
+
+  await loadProductosCache();
+}
+
+
+function filtrarProveedores(q) {
+  const dd = document.getElementById('cp-prov-dropdown');
+  const res = proveedoresCache.filter(p =>
+    p.razonsocial.toLowerCase().includes(q.toLowerCase()) || (p.ruc||'').includes(q)
+  );
+  if (!q || !res.length) { dd.classList.remove('show'); return; }
+  dd.innerHTML = res.slice(0,8).map(p => `
+    <div class="search-item" onclick="seleccionarProveedor('${p.idprovedor}','${p.razonsocial.replace(/'/g,"\\'") }','${p.ruc||''}')">
+      <div class="si-icon"><i class="bi bi-truck"></i></div>
+      <div>
+        <div class="si-name">${p.razonsocial}</div>
+        <div class="si-sub">RUC: ${p.ruc||'—'} · ${p.telefono||''}</div>
+      </div>
+    </div>`).join('');
+  dd.classList.add('show');
+}
+
+function seleccionarProveedor(id, nombre, ruc) {
+  document.getElementById('cp-proveedor').value = id;
+  document.getElementById('cp-prov-nombre').textContent = nombre;
+  document.getElementById('cp-prov-ruc').textContent = 'RUC: ' + (ruc||'—');
+  document.getElementById('cp-prov-card').classList.add('show');
+  document.getElementById('cp-prov-search').value = nombre;
+  document.getElementById('cp-prov-dropdown').classList.remove('show');
+}
+
+function limpiarProvedor() {
+  document.getElementById('cp-proveedor').value = '';
+  document.getElementById('cp-prov-search').value = '';
+  document.getElementById('cp-prov-card').classList.remove('show');
+}
+
+function filtrarProductosCompra(q) {
+  const dd = document.getElementById('cp-prod-dropdown');
+  const res = productosCache.filter(p =>
+    p.nombre.toLowerCase().includes(q.toLowerCase()) || (p.idproducto||'').toLowerCase().includes(q.toLowerCase())
+  );
+  if (!q || !res.length) { dd.classList.remove('show'); return; }
+  dd.innerHTML = res.slice(0,8).map(p => `
+    <div class="search-item" onclick='seleccionarProductoCompra(${JSON.stringify(p)})'>
+      <div class="si-icon"><i class="bi bi-box-seam"></i></div>
+      <div style="flex:1">
+        <div class="si-name">${p.nombre}</div>
+        <div class="si-sub">ID: ${p.idproducto} · P.Compra: S/ ${parseFloat(p.p_compra||0).toFixed(2)}</div>
+      </div>
+      <span class="badge bg-info text-dark si-badge">Stock: ${p.cantidad||0}</span>
+    </div>`).join('');
+  dd.classList.add('show');
+}
+
+function seleccionarProductoCompra(prod) {
+  cpProductoActual = prod;
+  document.getElementById('cp-prod-nombre').textContent = prod.nombre;
+  document.getElementById('cp-prod-precio-info').textContent = 'Precio compra: S/ ' + parseFloat(prod.p_compra||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
+  document.getElementById('cp-prod-card').classList.add('show');
+  document.getElementById('cp-prod-search').value = prod.nombre;
+  document.getElementById('cp-prod-dropdown').classList.remove('show');
+  document.getElementById('cp-cantidad').value = 1;
+}
+
+function cpQty(delta) {
+  const inp = document.getElementById('cp-cantidad');
+  inp.value = Math.max(1, (parseInt(inp.value)||1) + delta);
+}
+
+function agregarDetalleCompra() {
+  if (!cpProductoActual) return showAlert('Selecciona un producto primero', 'warning');
+  const cant = parseInt(document.getElementById('cp-cantidad').value) || 1;
+  const precio = parseFloat(cpProductoActual.p_compra) || 0;
+  const existing = detalleCompra.find(d => d.idproducto === cpProductoActual.idproducto);
+  if (existing) { existing.cantidad += cant; existing.total = existing.cantidad * existing.precio; }
+  else detalleCompra.push({ idproducto: cpProductoActual.idproducto, nombre: cpProductoActual.nombre, cantidad: cant, precio, total: cant * precio });
+  cpProductoActual = null;
+  document.getElementById('cp-prod-search').value = '';
+  document.getElementById('cp-prod-card').classList.remove('show');
+  document.getElementById('cp-cantidad').value = 1;
+  renderDetalleCompra();
+}
+
+function renderDetalleCompra() {
+  const tbody = document.querySelector('#tbl-detalle-compra tbody');
+  const empty = document.getElementById('cp-empty');
+  tbody.innerHTML = '';
+  let subtotal = 0;
+  detalleCompra.forEach((d, i) => {
+    subtotal += d.total;
+    const tr = document.createElement('tr');
+    tr.className = 'detalle-row';
+    tr.innerHTML = `<td>${i+1}</td>
+      <td><div class="prod-name">${d.nombre}</div><div class="prod-id">${d.idproducto}</div></td>
+      <td><div class="qty-control">
+        <button onclick="changeQtyCompra(${i},-1)">−</button>
+        <input type="number" value="${d.cantidad}" min="1" onchange="setQtyCompra(${i},this.value)" />
+        <button onclick="changeQtyCompra(${i},1)">+</button>
+      </div></td>
+      <td>${fmt(d.precio)}</td>
+      <td class="fw-bold">${fmt(d.total)}</td>
+      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeDetalleCompra(${i})"><i class="bi bi-trash"></i></button></td>`;
+    tbody.appendChild(tr);
+  });
+  if (empty) empty.style.display = detalleCompra.length ? 'none' : 'block';
+  document.getElementById('cp-count').textContent = detalleCompra.length + ' item' + (detalleCompra.length!==1?'s':'');
+  const igv = subtotal * IGV_RATE;
+  document.getElementById('cp-subtotal').textContent = fmt(subtotal);
+  document.getElementById('cp-igv').textContent = fmt(igv);
+  document.getElementById('cp-total').textContent = fmt(subtotal + igv);
+}
+
+function changeQtyCompra(i, delta) {
+  detalleCompra[i].cantidad = Math.max(1, detalleCompra[i].cantidad + delta);
+  detalleCompra[i].total = detalleCompra[i].cantidad * detalleCompra[i].precio;
+  renderDetalleCompra();
+}
+function setQtyCompra(i, v) {
+  detalleCompra[i].cantidad = Math.max(1, parseInt(v)||1);
+  detalleCompra[i].total = detalleCompra[i].cantidad * detalleCompra[i].precio;
+  renderDetalleCompra();
+}
+function removeDetalleCompra(i) { detalleCompra.splice(i, 1); renderDetalleCompra(); }
+
+async function guardarCompra() {
+  if (!document.getElementById('cp-proveedor').value) return showAlert('Selecciona un proveedor', 'warning');
+  if (!detalleCompra.length) return showAlert('Agrega al menos un producto', 'warning');
+  const subtotal = detalleCompra.reduce((s, d) => s + d.total, 0);
+  const igv = subtotal * IGV_RATE;
+  const r = await post('/api/compras', {
+    fecha: document.getElementById('cp-fecha').value,
+    hora: new Date().toTimeString().split(' ')[0],
+    num_documento: document.getElementById('cp-ndoc').value,
+    tipo_documento: document.getElementById('cp-tipo').value,
+    subtotal: subtotal.toFixed(2), igv: igv.toFixed(2), total: (subtotal+igv).toFixed(2),
+    estado: document.getElementById('cp-estado').value,
+    idusuario: sessionUser?.idusuario || 1,
+    idproveedor: document.getElementById('cp-proveedor').value,
+    detalles: detalleCompra,
+  });
+  if (r?.ok) { showAlert('Compra #' + r.idcompra + ' registrada correctamente'); showSection('compras'); }
+  else showAlert(r?.error || 'Error al guardar compra', 'danger');
+}
+
+// ─── VENTAS ──────────────────────────────────────────────────────────────────
+let vtProductoActual = null;
+let clientesCache = [];
+
+async function initNuevaVenta() {
+  detalleVenta = [];
+  vtProductoActual = null;
+  renderDetalleVenta();
+  document.getElementById('vt-fecha').value = today();
+  document.getElementById('vt-prod-card').classList.remove('show');
+  document.getElementById('vt-cli-card').classList.remove('show');
+  document.getElementById('vt-prod-search').value = '';
+  document.getElementById('vt-cli-search').value = '';
+  document.getElementById('vt-cliente').value = '';
+  actualizarSerieVenta();
+  const clis = await get('/api/clientes?buscar=');
+  if (clis) clientesCache = clis;
+  await loadProductosCache();
+}
+
+function actualizarSerieVenta() {
+  const tipo = document.getElementById('vt-tipo')?.value || 'Boleta';
+  const series  = { Boleta:'B001', Factura:'F001', Ticket:'T001' };
+  const prefijos = { Boleta:'B', Factura:'F', Ticket:'T' };
+  const serie = series[tipo]||'B001';
+  const ndoc  = (prefijos[tipo]||'B') + String(Date.now()).slice(-6);
+  const s = document.getElementById('vt-serie');
+  const n = document.getElementById('vt-ndoc');
+  const b = document.getElementById('vt-ndoc-badge');
+  if (s) s.value = serie;
+  if (n) n.value = ndoc;
+  if (b) b.textContent = serie + '-' + ndoc;
+}
+
+function filtrarClientes(q) {
+  const dd = document.getElementById('vt-cli-dropdown');
+  const res = clientesCache.filter(c =>
+    (c.nombres+' '+c.apellidos).toLowerCase().includes(q.toLowerCase()) ||
+    (c.dni||'').includes(q) || (c.codigo||'').toLowerCase().includes(q.toLowerCase())
+  );
+  if (!q || !res.length) { dd.classList.remove('show'); return; }
+  dd.innerHTML = res.slice(0,8).map(c => `
+    <div class="search-item" onclick="seleccionarCliente('${c.codigo}','${(c.nombres+' '+c.apellidos).replace(/'/g,"\\'")}','${c.dni||''}')">
+      <div class="si-icon" style="background:#eafaf1;color:#27ae60"><i class="bi bi-person"></i></div>
+      <div>
+        <div class="si-name">${c.nombres} ${c.apellidos}</div>
+        <div class="si-sub">DNI: ${c.dni||'—'} · Tel: ${c.telefono||'—'}</div>
+      </div>
+    </div>`).join('');
+  dd.classList.add('show');
+}
+
+function seleccionarCliente(codigo, nombre, dni) {
+  document.getElementById('vt-cliente').value = codigo;
+  document.getElementById('vt-cli-nombre').textContent = nombre;
+  document.getElementById('vt-cli-dni').textContent = 'DNI: ' + (dni||'—');
+  document.getElementById('vt-cli-card').classList.add('show');
+  document.getElementById('vt-cli-search').value = nombre;
+  document.getElementById('vt-cli-dropdown').classList.remove('show');
+}
+
+function limpiarCliente() {
+  document.getElementById('vt-cliente').value = '';
+  document.getElementById('vt-cli-search').value = '';
+  document.getElementById('vt-cli-card').classList.remove('show');
+}
+
+function filtrarProductosVenta(q) {
+  const dd = document.getElementById('vt-prod-dropdown');
+  const res = productosCache.filter(p =>
+    p.nombre.toLowerCase().includes(q.toLowerCase()) || (p.idproducto||'').toLowerCase().includes(q.toLowerCase())
+  );
+  if (!q || !res.length) { dd.classList.remove('show'); return; }
+  dd.innerHTML = res.slice(0,8).map(p => {
+    const stock = parseInt(p.cantidad)||0;
+    const sb = stock>0 ? '<span class="badge bg-success si-badge">Stock: '+stock+'</span>'
+                       : '<span class="badge bg-danger si-badge">Sin stock</span>';
+    return '<div class="search-item ' + (stock===0?'opacity-50':'') + '" onclick="' + (stock>0?'seleccionarProductoVenta('+JSON.stringify(p)+')':"showAlert('Sin stock','warning')") + '">'
+      + '<div class="si-icon"><i class="bi bi-box-seam"></i></div>'
+      + '<div style="flex:1"><div class="si-name">'+p.nombre+'</div>'
+      + '<div class="si-sub">ID: '+p.idproducto+' · P.Venta: S/ '+parseFloat(p.p_venta||0).toFixed(2)+'</div></div>'
+      + sb + '</div>';
+  }).join('');
+  dd.classList.add('show');
+}
+
+function seleccionarProductoVenta(prod) {
+  vtProductoActual = prod;
+  document.getElementById('vt-prod-nombre').textContent = prod.nombre;
+  document.getElementById('vt-prod-precio-info').textContent = 'Precio venta: S/ ' + parseFloat(prod.p_venta||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
+  document.getElementById('vt-prod-card').classList.add('show');
+  document.getElementById('vt-prod-search').value = prod.nombre;
+  document.getElementById('vt-prod-dropdown').classList.remove('show');
+  document.getElementById('vt-cantidad').value = 1;
+}
+
+function vtQty(delta) {
+  const inp = document.getElementById('vt-cantidad');
+  const max = vtProductoActual ? (parseInt(vtProductoActual.cantidad)||99) : 99;
+  inp.value = Math.min(max, Math.max(1, (parseInt(inp.value)||1) + delta));
+}
+
+function agregarDetalleVenta() {
+  if (!vtProductoActual) return showAlert('Selecciona un producto primero', 'warning');
+  const cant = parseInt(document.getElementById('vt-cantidad').value) || 1;
+  const stock = parseInt(vtProductoActual.cantidad) || 0;
+  if (cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
+  const precio = parseFloat(vtProductoActual.p_venta) || 0;
+  const existing = detalleVenta.find(d => d.idproducto === vtProductoActual.idproducto);
+  if (existing) {
+    if (existing.cantidad + cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
+    existing.cantidad += cant; existing.total = existing.cantidad * existing.precio;
+  } else {
+    detalleVenta.push({ idproducto: vtProductoActual.idproducto, nombre: vtProductoActual.nombre, cantidad: cant, precio, total: cant * precio });
+  }
+  vtProductoActual = null;
+  document.getElementById('vt-prod-search').value = '';
+  document.getElementById('vt-prod-card').classList.remove('show');
+  document.getElementById('vt-cantidad').value = 1;
+  renderDetalleVenta();
+}
+
+function renderDetalleVenta() {
+  const tbody = document.querySelector('#tbl-detalle-venta tbody');
+  const empty = document.getElementById('vt-empty');
+  tbody.innerHTML = '';
+  let subtotal = 0;
+  detalleVenta.forEach((d, i) => {
+    subtotal += d.total;
+    const tr = document.createElement('tr');
+    tr.className = 'detalle-row';
+    tr.innerHTML = `<td>${i+1}</td>
+      <td><div class="prod-name">${d.nombre}</div><div class="prod-id">${d.idproducto}</div></td>
+      <td><div class="qty-control">
+        <button onclick="changeQtyVenta(${i},-1)">−</button>
+        <input type="number" value="${d.cantidad}" min="1" onchange="setQtyVenta(${i},this.value)" />
+        <button onclick="changeQtyVenta(${i},1)">+</button>
+      </div></td>
+      <td>${fmt(d.precio)}</td>
+      <td class="fw-bold">${fmt(d.total)}</td>
+      <td><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeDetalleVenta(${i})"><i class="bi bi-trash"></i></button></td>`;
+    tbody.appendChild(tr);
+  });
+  if (empty) empty.style.display = detalleVenta.length ? 'none' : 'block';
+  document.getElementById('vt-count').textContent = detalleVenta.length + ' item' + (detalleVenta.length!==1?'s':'');
+  const igv = subtotal * IGV_RATE;
+  document.getElementById('vt-subtotal').textContent = fmt(subtotal);
+  document.getElementById('vt-igv').textContent = fmt(igv);
+  document.getElementById('vt-total').textContent = fmt(subtotal + igv);
+}
+
+function changeQtyVenta(i, delta) {
+  detalleVenta[i].cantidad = Math.max(1, detalleVenta[i].cantidad + delta);
+  detalleVenta[i].total = detalleVenta[i].cantidad * detalleVenta[i].precio;
+  renderDetalleVenta();
+}
+function setQtyVenta(i, v) {
+  detalleVenta[i].cantidad = Math.max(1, parseInt(v)||1);
+  detalleVenta[i].total = detalleVenta[i].cantidad * detalleVenta[i].precio;
+  renderDetalleVenta();
+}
+function removeDetalleVenta(i) { detalleVenta.splice(i, 1); renderDetalleVenta(); }
+
+async function guardarVenta() {
+  if (!document.getElementById('vt-cliente').value) return showAlert('Selecciona un cliente', 'warning');
+  if (!detalleVenta.length) return showAlert('Agrega al menos un producto', 'warning');
+  const subtotal = detalleVenta.reduce((s, d) => s + d.total, 0);
+  const igv = subtotal * IGV_RATE;
+  const r = await post('/api/ventas', {
+    fecha: document.getElementById('vt-fecha').value,
+    hora: new Date().toTimeString().split(' ')[0],
+    serie: document.getElementById('vt-serie').value,
+    num_documento: document.getElementById('vt-ndoc').value,
+    tipo_documento: document.getElementById('vt-tipo').value,
+    subtotal: subtotal.toFixed(2), igv: igv.toFixed(2), total: (subtotal+igv).toFixed(2),
+    estado: document.getElementById('vt-estado').value,
+    idusuario: sessionUser?.idusuario || 1,
+    idcliente: document.getElementById('vt-cliente').value,
+    detalles: detalleVenta,
+  });
+  if (r?.ok) { showAlert('Venta #' + r.idventa + ' registrada correctamente'); showSection('ventas'); }
+  else showAlert(r?.error || 'Error al guardar venta', 'danger');
+}
+
+// ─── Cerrar dropdowns al hacer click fuera ───────────────────────────────────
+document.addEventListener('click', e => {
+  document.querySelectorAll('.search-dropdown').forEach(dd => {
+    if (!dd.parentElement.contains(e.target)) dd.classList.remove('show');
+  });
+});
+
+// ═══════════════════════ CONSULTAS ═══════════════════════════════════════════
+async function loadConsulta(tipo) {
+  const data = await get('/api/consultas/' + tipo + '?buscar=');
+  if (!data) return;
+  const tbody = document.querySelector('#tbl-consulta-' + tipo + ' tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    if (tipo === 'ventas') {
+      tr.innerHTML = '<td>'+row.idventa+'</td><td>'+(row.fecha||'')+'</td><td>'+(row.serie||'')+'</td>'
+        +'<td>'+(row.num_documento||'')+'</td><td>'+fmt(row.subtotal)+'</td>'
+        +'<td>'+fmt(row.igv)+'</td><td class="fw-bold">'+fmt(row.total)+'</td>'
+        +'<td><span class="badge '+(row.estado==='Activo'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
+    } else {
+      tr.innerHTML = '<td>'+row.idcompra+'</td><td>'+(row.fecha||'')+'</td><td>'+(row.num_documento||'')+'</td>'
+        +'<td>'+(row.tipo_documento||'')+'</td><td>'+fmt(row.subtotal)+'</td>'
+        +'<td>'+fmt(row.igv)+'</td><td class="fw-bold">'+fmt(row.total)+'</td>'
+        +'<td><span class="badge '+(row.estado==='Activo'?'badge-activo':'badge-inactivo')+'">'+(row.estado||'')+'</span></td>';
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ═══════════════════════ CACHE PRODUCTOS ═════════════════════════════════════
+async function loadProductosCache() {
+  const data = await get('/api/productos?buscar=');
+  if (data) productosCache = data;
+}
+
+// ═══════════════════════ DATE HEADER ═════════════════════════════════════════
+function setDateHeader() {
+  const el = document.getElementById('current-date');
+  if (el) el.textContent = new Date().toLocaleDateString('es-PE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+
+// ═══════════════════════ INIT ════════════════════════════════════════════════
+(async () => {
+  setDateHeader();
+  const me = await get('/api/me');
+  if (me && me.usuario) {
+    sessionUser = me;
+    setUserInfo(me);
+    showApp();
+    loadDashboard();
+    loadProductosCache();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
