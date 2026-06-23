@@ -1063,7 +1063,7 @@
         </div>
         <div class="col-md-4">
           <label class="form-label fw-semibold">Nombres</label>
-          <input id="cli-nombres" type="text" class="form-control" />
+          <input id="cli-nombre" type="text" class="form-control" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-semibold">Apellidos</label>
@@ -1364,7 +1364,7 @@ async function loadTable(name, buscar = '') {
   const renderers = {
     categorias: row => `
       <td>${row.idcategoria}</td>
-      <td>${row.ncategoria}</td>
+      <td>${row.descripcion}</td>
       <td>${actionBtns('categorias', row.idcategoria, row)}</td>`,
 
     productos: row => `
@@ -1373,28 +1373,28 @@ async function loadTable(name, buscar = '') {
       <td>${row.nombre}</td>
       <td>${row.f_ingreso||''}</td>
       <td>${row.f_vencimiento||''}</td>
-      <td>${fmt(row.p_compra)}</td>
-      <td>${fmt(row.p_venta)}</td>
+      <td>${fmt(row.prec_compra)}</td>
+      <td>${fmt(row.prec_venta)}</td>
       <td><span class="badge bg-info text-dark">${row.cantidad||0}</span></td>
-      <td>${row.ncategoria||''}</td>
+      <td>${row.descripcion||''}</td>
       <td>${actionBtns('productos', row.idproducto, row)}</td>`,
 
     proveedores: row => `
-      <td>${row.idprovedor}</td>
+      <td>${row.idproveedor}</td>
       <td>${row.razonsocial}</td>
       <td>${row.ruc||''}</td>
       <td>${row.telefono||''}</td>
       <td>${row.direccion||''}</td>
-      <td>${actionBtns('proveedores', row.idprovedor, row)}</td>`,
+      <td>${actionBtns('proveedores', row.idproveedor, row)}</td>`,
 
     clientes: row => `
-      <td>${row.codigo}</td>
-      <td>${row.nombres}</td>
+      <td>${row.idcliente}</td>
+      <td>${row.nombre}</td>
       <td>${row.apellidos}</td>
       <td>${row.dni||''}</td>
       <td>${row.ruc||''}</td>
       <td>${row.telefono||''}</td>
-      <td>${actionBtns('clientes', row.codigo, row)}</td>`,
+      <td>${actionBtns('clientes', row.idcliente, row)}</td>`,
 
     empleados: row => `
       <td>${row.idempleado}</td>
@@ -1468,7 +1468,7 @@ function clearModal(section) {
     categorias: ['cat-id','cat-nombre'],
     productos: ['prod-id','prod-serie','prod-nombre','prod-fingreso','prod-fvencimiento','prod-pcompra','prod-pventa'],
     proveedores: ['prov-id','prov-razonsocial','prov-ruc','prov-telefono','prov-direccion'],
-    clientes: ['cli-codigo','cli-nombres','cli-apellidos','cli-dni','cli-ruc','cli-edad','cli-telefono','cli-direccion'],
+    clientes: ['cli-codigo','cli-nombre','cli-apellidos','cli-dni','cli-ruc','cli-edad','cli-telefono','cli-direccion'],
     empleados: ['emp-id','emp-nombre','emp-apellidos','emp-dni','emp-telefono','emp-direccion'],
     usuarios: ['usr-id','usr-idempleado','usr-usuario','usr-password'],
   };
@@ -1483,7 +1483,7 @@ async function loadCategoriasSelect() {
   const data = await get('/api/categorias?buscar=');
   const sel = document.getElementById('prod-categoria');
   if (!sel || !data) return;
-  sel.innerHTML = data.map(c => `<option value="${c.idcategoria}">${c.ncategoria}</option>`).join('');
+  sel.innerHTML = data.map(c => `<option value="${c.idcategoria}">${c.descripcion}</option>`).join('');
 }
 
 function editRow(section, row) {
@@ -1494,7 +1494,7 @@ function editRow(section, row) {
   if (section === 'categorias') {
     editingId = row.idcategoria;
     document.getElementById('cat-id').value = row.idcategoria;
-    document.getElementById('cat-nombre').value = row.ncategoria;
+    document.getElementById('cat-nombre').value = row.descripcion;
   } else if (section === 'productos') {
     editingId = row.idproducto;
     loadCategoriasSelect().then(() => {
@@ -1504,23 +1504,23 @@ function editRow(section, row) {
       document.getElementById('prod-nombre').value = row.nombre;
       document.getElementById('prod-fingreso').value = row.f_ingreso || '';
       document.getElementById('prod-fvencimiento').value = row.f_vencimiento || '';
-      document.getElementById('prod-pcompra').value = row.p_compra || '';
-      document.getElementById('prod-pventa').value = row.p_venta || '';
+      document.getElementById('prod-pcompra').value = row.prec_compra || '';
+      document.getElementById('prod-pventa').value = row.prec_venta || '';
       document.getElementById('prod-categoria').value = row.idcategoria || '';
     });
   } else if (section === 'proveedores') {
-    editingId = row.idprovedor;
-    document.getElementById('prov-id').value = row.idprovedor;
+    editingId = row.idproveedor;
+    document.getElementById('prov-id').value = row.idproveedor;
     document.getElementById('prov-id').readOnly = true;
     document.getElementById('prov-razonsocial').value = row.razonsocial;
     document.getElementById('prov-ruc').value = row.ruc || '';
     document.getElementById('prov-telefono').value = row.telefono || '';
     document.getElementById('prov-direccion').value = row.direccion || '';
   } else if (section === 'clientes') {
-    editingId = row.codigo;
-    document.getElementById('cli-codigo').value = row.codigo;
+    editingId = row.idcliente;
+    document.getElementById('cli-codigo').value = row.idcliente;
     document.getElementById('cli-codigo').readOnly = true;
-    document.getElementById('cli-nombres').value = row.nombres;
+    document.getElementById('cli-nombre').value = row.nombre;
     document.getElementById('cli-apellidos').value = row.apellidos;
     document.getElementById('cli-dni').value = row.dni || '';
     document.getElementById('cli-ruc').value = row.ruc || '';
@@ -1561,8 +1561,8 @@ async function saveCategoria() {
   const nombre = document.getElementById('cat-nombre').value.trim();
   if (!nombre) return showAlert('Ingresa el nombre de la categoría', 'warning');
   const id = editingId;
-  const r = id ? await put(`/api/categorias/${id}`, { ncategoria: nombre })
-               : await post('/api/categorias', { ncategoria: nombre });
+  const r = id ? await put(`/api/categorias/${id}`, { descripcion: nombre })
+               : await post('/api/categorias', { descripcion: nombre });
   if (r?.ok) {
     showAlert(id ? 'Categoría actualizada' : 'Categoría registrada');
     bootstrap.Modal.getInstance(document.getElementById('modal-categorias')).hide();
@@ -1580,7 +1580,7 @@ async function saveProducto() {
   const pc    = document.getElementById('prod-pcompra').value;
   const cat   = document.getElementById('prod-categoria').value;
   if (!id || !nombre) return showAlert('ID y Nombre son requeridos', 'warning');
-  const body = { idproducto: id, serie, nombre, f_ingreso: fi, f_vencimiento: fv, p_venta: pv, p_compra: pc, idcategoria: cat };
+  const body = { idproducto: id, serie, nombre, f_ingreso: fi, f_vencimiento: fv, prec_venta: pv, prec_compra: pc, idcategoria: cat };
   const r = editingId ? await put(`/api/productos/${editingId}`, body)
                       : await post('/api/productos', body);
   if (r?.ok) {
@@ -1599,7 +1599,7 @@ async function saveProveedor() {
   const tel = document.getElementById('prov-telefono').value.trim();
   const dir = document.getElementById('prov-direccion').value.trim();
   if (!id || !rs) return showAlert('ID y Razón Social son requeridos', 'warning');
-  const body = { idprovedor: id, razonsocial: rs, ruc, telefono: tel, direccion: dir };
+  const body = { idproveedor: id, razonsocial: rs, ruc, telefono: tel, direccion: dir };
   const r = editingId ? await put(`/api/proveedores/${editingId}`, body)
                       : await post('/api/proveedores', body);
   if (r?.ok) {
@@ -1612,11 +1612,11 @@ async function saveProveedor() {
 
 async function saveCliente() {
   const cod = document.getElementById('cli-codigo').value.trim();
-  const nom = document.getElementById('cli-nombres').value.trim();
+  const nom = document.getElementById('cli-nombre').value.trim();
   const ap  = document.getElementById('cli-apellidos').value.trim();
   if (!cod || !nom) return showAlert('Código y Nombres son requeridos', 'warning');
   const body = {
-    codigo: cod, nombres: nom, apellidos: ap,
+    idcliente: cod, nombre: nom, apellidos: ap,
     dni: document.getElementById('cli-dni').value.trim(),
     ruc: document.getElementById('cli-ruc').value.trim(),
     edad: document.getElementById('cli-edad').value || 0,
@@ -1708,7 +1708,7 @@ function filtrarProveedores(q) {
   );
   if (!q || !res.length) { dd.classList.remove('show'); return; }
   dd.innerHTML = res.slice(0,8).map(p => `
-    <div class="search-item" onclick="seleccionarProveedor('${p.idprovedor}','${p.razonsocial.replace(/'/g,"\\'") }','${p.ruc||''}')">
+    <div class="search-item" onclick="seleccionarProveedor('${p.idproveedor}','${p.razonsocial.replace(/'/g,"\\'") }','${p.ruc||''}')">
       <div class="si-icon"><i class="bi bi-truck"></i></div>
       <div>
         <div class="si-name">${p.razonsocial}</div>
@@ -1744,7 +1744,7 @@ function filtrarProductosCompra(q) {
       <div class="si-icon"><i class="bi bi-box-seam"></i></div>
       <div style="flex:1">
         <div class="si-name">${p.nombre}</div>
-        <div class="si-sub">ID: ${p.idproducto} · P.Compra: S/ ${parseFloat(p.p_compra||0).toFixed(2)}</div>
+        <div class="si-sub">ID: ${p.idproducto} · P.Compra: S/ ${parseFloat(p.prec_compra||0).toFixed(2)}</div>
       </div>
       <span class="badge bg-info text-dark si-badge">Stock: ${p.cantidad||0}</span>
     </div>`).join('');
@@ -1754,7 +1754,7 @@ function filtrarProductosCompra(q) {
 function seleccionarProductoCompra(prod) {
   cpProductoActual = prod;
   document.getElementById('cp-prod-nombre').textContent = prod.nombre;
-  document.getElementById('cp-prod-precio-info').textContent = 'Precio compra: S/ ' + parseFloat(prod.p_compra||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
+  document.getElementById('cp-prod-precio-info').textContent = 'Precio compra: S/ ' + parseFloat(prod.prec_compra||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
   document.getElementById('cp-prod-card').classList.add('show');
   document.getElementById('cp-prod-search').value = prod.nombre;
   document.getElementById('cp-prod-dropdown').classList.remove('show');
@@ -1769,7 +1769,7 @@ function cpQty(delta) {
 function agregarDetalleCompra() {
   if (!cpProductoActual) return showAlert('Selecciona un producto primero', 'warning');
   const cant = parseInt(document.getElementById('cp-cantidad').value) || 1;
-  const precio = parseFloat(cpProductoActual.p_compra) || 0;
+  const precio = parseFloat(cpProductoActual.prec_compra) || 0;
   const existing = detalleCompra.find(d => d.idproducto === cpProductoActual.idproducto);
   if (existing) { existing.cantidad += cant; existing.total = existing.cantidad * existing.precio; }
   else detalleCompra.push({ idproducto: cpProductoActual.idproducto, nombre: cpProductoActual.nombre, cantidad: cant, precio, total: cant * precio });
@@ -1878,23 +1878,23 @@ function actualizarSerieVenta() {
 function filtrarClientes(q) {
   const dd = document.getElementById('vt-cli-dropdown');
   const res = clientesCache.filter(c =>
-    (c.nombres+' '+c.apellidos).toLowerCase().includes(q.toLowerCase()) ||
-    (c.dni||'').includes(q) || (c.codigo||'').toLowerCase().includes(q.toLowerCase())
+    (c.nombre+' '+c.apellidos).toLowerCase().includes(q.toLowerCase()) ||
+    (c.dni||'').includes(q) || (c.idcliente||'').toLowerCase().includes(q.toLowerCase())
   );
   if (!q || !res.length) { dd.classList.remove('show'); return; }
   dd.innerHTML = res.slice(0,8).map(c => `
-    <div class="search-item" onclick="seleccionarCliente('${c.codigo}','${(c.nombres+' '+c.apellidos).replace(/'/g,"\\'")}','${c.dni||''}')">
+    <div class="search-item" onclick="seleccionarCliente('${c.idcliente}','${(c.nombre+' '+c.apellidos).replace(/'/g,"\\'")}','${c.dni||''}')">
       <div class="si-icon" style="background:#eafaf1;color:#27ae60"><i class="bi bi-person"></i></div>
       <div>
-        <div class="si-name">${c.nombres} ${c.apellidos}</div>
+        <div class="si-name">${c.nombre} ${c.apellidos}</div>
         <div class="si-sub">DNI: ${c.dni||'—'} · Tel: ${c.telefono||'—'}</div>
       </div>
     </div>`).join('');
   dd.classList.add('show');
 }
 
-function seleccionarCliente(codigo, nombre, dni) {
-  document.getElementById('vt-cliente').value = codigo;
+function seleccionarCliente(idcliente, nombre, dni) {
+  document.getElementById('vt-cliente').value = idcliente;
   document.getElementById('vt-cli-nombre').textContent = nombre;
   document.getElementById('vt-cli-dni').textContent = 'DNI: ' + (dni||'—');
   document.getElementById('vt-cli-card').classList.add('show');
@@ -1921,7 +1921,7 @@ function filtrarProductosVenta(q) {
     return '<div class="search-item ' + (stock===0?'opacity-50':'') + '" onclick="' + (stock>0?'seleccionarProductoVenta('+JSON.stringify(p)+')':"showAlert('Sin stock','warning')") + '">'
       + '<div class="si-icon"><i class="bi bi-box-seam"></i></div>'
       + '<div style="flex:1"><div class="si-name">'+p.nombre+'</div>'
-      + '<div class="si-sub">ID: '+p.idproducto+' · P.Venta: S/ '+parseFloat(p.p_venta||0).toFixed(2)+'</div></div>'
+      + '<div class="si-sub">ID: '+p.idproducto+' · P.Venta: S/ '+parseFloat(p.prec_venta||0).toFixed(2)+'</div></div>'
       + sb + '</div>';
   }).join('');
   dd.classList.add('show');
@@ -1930,7 +1930,7 @@ function filtrarProductosVenta(q) {
 function seleccionarProductoVenta(prod) {
   vtProductoActual = prod;
   document.getElementById('vt-prod-nombre').textContent = prod.nombre;
-  document.getElementById('vt-prod-precio-info').textContent = 'Precio venta: S/ ' + parseFloat(prod.p_venta||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
+  document.getElementById('vt-prod-precio-info').textContent = 'Precio venta: S/ ' + parseFloat(prod.prec_venta||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
   document.getElementById('vt-prod-card').classList.add('show');
   document.getElementById('vt-prod-search').value = prod.nombre;
   document.getElementById('vt-prod-dropdown').classList.remove('show');
@@ -1948,7 +1948,7 @@ function agregarDetalleVenta() {
   const cant = parseInt(document.getElementById('vt-cantidad').value) || 1;
   const stock = parseInt(vtProductoActual.cantidad) || 0;
   if (cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
-  const precio = parseFloat(vtProductoActual.p_venta) || 0;
+  const precio = parseFloat(vtProductoActual.prec_venta) || 0;
   const existing = detalleVenta.find(d => d.idproducto === vtProductoActual.idproducto);
   if (existing) {
     if (existing.cantidad + cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
