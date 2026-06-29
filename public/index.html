@@ -1182,8 +1182,8 @@
         <div class="col-md-3">
           <label class="form-label fw-semibold">Estado</label>
           <select id="usr-estado" class="form-select">
-            <option value="SI">Activo (SI)</option>
-            <option value="NO">Inactivo (NO)</option>
+            <option value="SI">Activo</option>
+            <option value="NO">Inactivo</option>
           </select>
         </div>
         <input type="hidden" id="usr-id" />
@@ -1543,7 +1543,7 @@ function editRow(section, row) {
     document.getElementById('usr-idempleado').value = row.idempleado || '';
     document.getElementById('usr-usuario').value = row.usuario;
     document.getElementById('usr-acceso').value = row.acceso || 'Usuario';
-    document.getElementById('usr-estado').value = (row.estado||'').trim() || 'SI';
+    document.getElementById('usr-estado').value = (row.estado||'').trim().startsWith('S') ? 'SI' : 'NO';
   }
 
   bootstrap.Modal.getOrCreateInstance(modalEl).show();
