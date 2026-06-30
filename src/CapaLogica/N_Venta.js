@@ -11,6 +11,28 @@ class N_Venta extends BaseDAO {
     const client = await this.obtenerCliente();
     try {
       await client.query('BEGIN');
+
+      const cantidades = new Map();
+      for (const d of detalles) {
+        const cantidad = parseInt(d.cantidad, 10) || 0;
+        if (cantidad <= 0) throw new Error('La cantidad de venta debe ser mayor a cero');
+        cantidades.set(d.idproducto, (cantidades.get(d.idproducto) || 0) + cantidad);
+      }
+
+      for (const [idproducto, cantidad] of cantidades) {
+        const stockActual = await client.query(
+          'SELECT nombre, cantidad FROM productos WHERE idproducto=$1 FOR UPDATE',
+          [idproducto]
+        );
+        if (!stockActual.rows.length) throw new Error('Producto no encontrado: ' + idproducto);
+
+        const producto = stockActual.rows[0];
+        const disponible = Math.max(0, parseInt(producto.cantidad, 10) || 0);
+        if (cantidad > disponible) {
+          throw new Error('Stock insuficiente para ' + (producto.nombre || idproducto) + '. Disponible: ' + disponible);
+        }
+      }
+
       await client.query(
         'CALL sp_guardar_venta($1,$2,$3,$4,$5,CAST($6 AS numeric),CAST($7 AS numeric),CAST($8 AS numeric),$9,CAST($10 AS integer),$11)',
         [venta.fecha, venta.hora, venta.serie, venta.num_documento, venta.tipo_documento,
@@ -24,7 +46,6 @@ class N_Venta extends BaseDAO {
           'CALL sp_guardar_detalle_venta(CAST($1 AS integer),$2,CAST($3 AS integer),CAST($4 AS numeric),CAST($5 AS numeric))',
           [idventa, d.idproducto, d.cantidad, d.precio, d.total]
         );
-        await client.query('UPDATE productos SET cantidad=cantidad-$1 WHERE idproducto=$2', [d.cantidad, d.idproducto]);
       }
       await client.query('COMMIT');
       return idventa;

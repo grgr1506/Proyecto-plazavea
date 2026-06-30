@@ -1207,6 +1207,8 @@ let detalleCompra = [];
 let detalleVenta = [];
 let productosCache = [];
 let sessionUser = null;
+let guardandoCompra = false;
+let guardandoVenta = false;
 const IGV_RATE = 0.18;
 
 // ═══════════════════════ UTILS ═══════════════════════════════════════════════
@@ -1234,6 +1236,7 @@ function showAlert(msg, type = 'success') {
 }
 
 function fmt(n) { return 'S/ ' + parseFloat(n || 0).toFixed(2); }
+function stockDisponible(cantidad) { return Math.max(0, parseInt(cantidad, 10) || 0); }
 function today() { return new Date().toISOString().split('T')[0]; }
 
 // ═══════════════════════ AUTH ════════════════════════════════════════════════
@@ -1375,7 +1378,7 @@ async function loadTable(name, buscar = '') {
       <td>${row.f_vencimiento||''}</td>
       <td>${fmt(row.prec_compra)}</td>
       <td>${fmt(row.prec_venta)}</td>
-      <td><span class="badge bg-info text-dark">${row.cantidad||0}</span></td>
+      <td><span class="badge ${stockDisponible(row.cantidad) > 0 ? 'bg-info text-dark' : 'bg-danger'}">${stockDisponible(row.cantidad)}</span></td>
       <td>${row.descripcion||''}</td>
       <td>${actionBtns('productos', row.idproducto, row)}</td>`,
 
@@ -1822,23 +1825,29 @@ function setQtyCompra(i, v) {
 function removeDetalleCompra(i) { detalleCompra.splice(i, 1); renderDetalleCompra(); }
 
 async function guardarCompra() {
+  if (guardandoCompra) return;
   if (!document.getElementById('cp-proveedor').value) return showAlert('Selecciona un proveedor', 'warning');
   if (!detalleCompra.length) return showAlert('Agrega al menos un producto', 'warning');
+  guardandoCompra = true;
   const subtotal = detalleCompra.reduce((s, d) => s + d.total, 0);
   const igv = subtotal * IGV_RATE;
-  const r = await post('/api/compras', {
-    fecha: document.getElementById('cp-fecha').value,
-    hora: new Date().toTimeString().split(' ')[0],
-    num_documento: document.getElementById('cp-ndoc').value,
-    tipo_documento: document.getElementById('cp-tipo').value,
-    subtotal: subtotal.toFixed(2), igv: igv.toFixed(2), total: (subtotal+igv).toFixed(2),
-    estado: document.getElementById('cp-estado').value,
-    idusuario: sessionUser?.idusuario || 1,
-    idproveedor: document.getElementById('cp-proveedor').value,
-    detalles: detalleCompra,
-  });
-  if (r?.ok) { showAlert('Compra #' + r.idcompra + ' registrada correctamente'); showSection('compras'); }
-  else showAlert(r?.error || 'Error al guardar compra', 'danger');
+  try {
+    const r = await post('/api/compras', {
+      fecha: document.getElementById('cp-fecha').value,
+      hora: new Date().toTimeString().split(' ')[0],
+      num_documento: document.getElementById('cp-ndoc').value,
+      tipo_documento: document.getElementById('cp-tipo').value,
+      subtotal: subtotal.toFixed(2), igv: igv.toFixed(2), total: (subtotal+igv).toFixed(2),
+      estado: document.getElementById('cp-estado').value,
+      idusuario: sessionUser?.idusuario || 1,
+      idproveedor: document.getElementById('cp-proveedor').value,
+      detalles: detalleCompra,
+    });
+    if (r?.ok) { showAlert('Compra #' + r.idcompra + ' registrada correctamente'); showSection('compras'); }
+    else showAlert(r?.error || 'Error al guardar compra', 'danger');
+  } finally {
+    guardandoCompra = false;
+  }
 }
 
 // ─── VENTAS ──────────────────────────────────────────────────────────────────
@@ -1915,10 +1924,11 @@ function filtrarProductosVenta(q) {
   );
   if (!q || !res.length) { dd.classList.remove('show'); return; }
   dd.innerHTML = res.slice(0,8).map(p => {
-    const stock = parseInt(p.cantidad)||0;
+    const idx = productosCache.findIndex(prod => prod.idproducto === p.idproducto);
+    const stock = stockDisponible(p.cantidad);
     const sb = stock>0 ? '<span class="badge bg-success si-badge">Stock: '+stock+'</span>'
                        : '<span class="badge bg-danger si-badge">Sin stock</span>';
-    return '<div class="search-item ' + (stock===0?'opacity-50':'') + '" onclick="' + (stock>0?'seleccionarProductoVenta('+JSON.stringify(p)+')':"showAlert('Sin stock','warning')") + '">'
+    return '<div class="search-item ' + (stock===0?'opacity-50':'') + '" onclick="' + (stock>0?'seleccionarProductoVentaPorIndice('+idx+')':"showAlert('Sin stock','warning')") + '">'
       + '<div class="si-icon"><i class="bi bi-box-seam"></i></div>'
       + '<div style="flex:1"><div class="si-name">'+p.nombre+'</div>'
       + '<div class="si-sub">ID: '+p.idproducto+' · P.Venta: S/ '+parseFloat(p.prec_venta||0).toFixed(2)+'</div></div>'
@@ -1927,26 +1937,35 @@ function filtrarProductosVenta(q) {
   dd.classList.add('show');
 }
 
+function seleccionarProductoVentaPorIndice(index) {
+  const prod = productosCache[index];
+  if (!prod) return showAlert('No se pudo seleccionar el producto', 'warning');
+  seleccionarProductoVenta(prod);
+}
+
 function seleccionarProductoVenta(prod) {
   vtProductoActual = prod;
+  const stock = stockDisponible(prod.cantidad);
   document.getElementById('vt-prod-nombre').textContent = prod.nombre;
-  document.getElementById('vt-prod-precio-info').textContent = 'Precio venta: S/ ' + parseFloat(prod.prec_venta||0).toFixed(2) + ' · Stock: ' + (prod.cantidad||0);
   document.getElementById('vt-prod-card').classList.add('show');
+  document.getElementById('vt-prod-precio-info').textContent = 'Precio venta: S/ ' + parseFloat(prod.prec_venta||0).toFixed(2) + ' - Stock: ' + stock;
   document.getElementById('vt-prod-search').value = prod.nombre;
   document.getElementById('vt-prod-dropdown').classList.remove('show');
   document.getElementById('vt-cantidad').value = 1;
+  document.getElementById('vt-cantidad').max = stock;
 }
 
 function vtQty(delta) {
   const inp = document.getElementById('vt-cantidad');
-  const max = vtProductoActual ? (parseInt(vtProductoActual.cantidad)||99) : 99;
+  const max = vtProductoActual ? stockDisponible(vtProductoActual.cantidad) : 99;
   inp.value = Math.min(max, Math.max(1, (parseInt(inp.value)||1) + delta));
 }
 
 function agregarDetalleVenta() {
   if (!vtProductoActual) return showAlert('Selecciona un producto primero', 'warning');
   const cant = parseInt(document.getElementById('vt-cantidad').value) || 1;
-  const stock = parseInt(vtProductoActual.cantidad) || 0;
+  const stock = stockDisponible(vtProductoActual.cantidad);
+  if (stock <= 0) return showAlert('No hay stock disponible para este producto', 'warning');
   if (cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
   const precio = parseFloat(vtProductoActual.prec_venta) || 0;
   const existing = detalleVenta.find(d => d.idproducto === vtProductoActual.idproducto);
@@ -1954,7 +1973,7 @@ function agregarDetalleVenta() {
     if (existing.cantidad + cant > stock) return showAlert('Stock insuficiente. Disponible: ' + stock, 'warning');
     existing.cantidad += cant; existing.total = existing.cantidad * existing.precio;
   } else {
-    detalleVenta.push({ idproducto: vtProductoActual.idproducto, nombre: vtProductoActual.nombre, cantidad: cant, precio, total: cant * precio });
+    detalleVenta.push({ idproducto: vtProductoActual.idproducto, nombre: vtProductoActual.nombre, cantidad: cant, precio, stock, total: cant * precio });
   }
   vtProductoActual = null;
   document.getElementById('vt-prod-search').value = '';
@@ -1976,7 +1995,7 @@ function renderDetalleVenta() {
       <td><div class="prod-name">${d.nombre}</div><div class="prod-id">${d.idproducto}</div></td>
       <td><div class="qty-control">
         <button onclick="changeQtyVenta(${i},-1)">−</button>
-        <input type="number" value="${d.cantidad}" min="1" onchange="setQtyVenta(${i},this.value)" />
+        <input type="number" value="${d.cantidad}" min="1" max="${d.stock || d.cantidad}" onchange="setQtyVenta(${i},this.value)" />
         <button onclick="changeQtyVenta(${i},1)">+</button>
       </div></td>
       <td>${fmt(d.precio)}</td>
@@ -1993,36 +2012,67 @@ function renderDetalleVenta() {
 }
 
 function changeQtyVenta(i, delta) {
-  detalleVenta[i].cantidad = Math.max(1, detalleVenta[i].cantidad + delta);
+  const max = parseInt(detalleVenta[i].stock) || detalleVenta[i].cantidad;
+  const next = Math.min(max, Math.max(1, detalleVenta[i].cantidad + delta));
+  if (delta > 0 && next === detalleVenta[i].cantidad) showAlert('Stock máximo disponible: ' + max, 'warning');
+  detalleVenta[i].cantidad = next;
   detalleVenta[i].total = detalleVenta[i].cantidad * detalleVenta[i].precio;
   renderDetalleVenta();
 }
 function setQtyVenta(i, v) {
-  detalleVenta[i].cantidad = Math.max(1, parseInt(v)||1);
+  const max = parseInt(detalleVenta[i].stock) || detalleVenta[i].cantidad;
+  const requested = parseInt(v) || 1;
+  if (requested > max) showAlert('Stock máximo disponible: ' + max, 'warning');
+  detalleVenta[i].cantidad = Math.min(max, Math.max(1, requested));
   detalleVenta[i].total = detalleVenta[i].cantidad * detalleVenta[i].precio;
   renderDetalleVenta();
 }
 function removeDetalleVenta(i) { detalleVenta.splice(i, 1); renderDetalleVenta(); }
 
 async function guardarVenta() {
-  if (!document.getElementById('vt-cliente').value) return showAlert('Selecciona un cliente', 'warning');
-  if (!detalleVenta.length) return showAlert('Agrega al menos un producto', 'warning');
-  const subtotal = detalleVenta.reduce((s, d) => s + d.total, 0);
-  const igv = subtotal * IGV_RATE;
-  const r = await post('/api/ventas', {
-    fecha: document.getElementById('vt-fecha').value,
-    hora: new Date().toTimeString().split(' ')[0],
-    serie: document.getElementById('vt-serie').value,
-    num_documento: document.getElementById('vt-ndoc').value,
-    tipo_documento: document.getElementById('vt-tipo').value,
-    subtotal: subtotal.toFixed(2), igv: igv.toFixed(2), total: (subtotal+igv).toFixed(2),
-    estado: document.getElementById('vt-estado').value,
-    idusuario: sessionUser?.idusuario || 1,
-    idcliente: document.getElementById('vt-cliente').value,
-    detalles: detalleVenta,
-  });
-  if (r?.ok) { showAlert('Venta #' + r.idventa + ' registrada correctamente'); showSection('ventas'); }
-  else showAlert(r?.error || 'Error al guardar venta', 'danger');
+
+    if (guardandoVenta) return;
+    guardandoVenta = true;
+
+    try {
+
+        if (!document.getElementById('vt-cliente').value)
+            return showAlert('Selecciona un cliente', 'warning');
+
+        if (!detalleVenta.length)
+            return showAlert('Agrega al menos un producto', 'warning');
+
+        const subtotal = detalleVenta.reduce((s, d) => s + d.total, 0);
+        const igv = subtotal * IGV_RATE;
+
+        console.log("Detalle que se enviará:", detalleVenta);
+
+        const r = await post('/api/ventas', {
+          
+            fecha: document.getElementById('vt-fecha').value,
+            hora: new Date().toTimeString().split(' ')[0],
+            serie: document.getElementById('vt-serie').value,
+            num_documento: document.getElementById('vt-ndoc').value,
+            tipo_documento: document.getElementById('vt-tipo').value,
+            subtotal: subtotal.toFixed(2),
+            igv: igv.toFixed(2),
+            total: (subtotal + igv).toFixed(2),
+            estado: document.getElementById('vt-estado').value,
+            idusuario: sessionUser?.idusuario || 1,
+            idcliente: document.getElementById('vt-cliente').value,
+            detalles: detalleVenta
+        });
+
+        if (r?.ok) {
+            showAlert('Venta #' + r.idventa + ' registrada correctamente');
+            showSection('ventas');
+        } else {
+            showAlert(r?.error || 'Error al guardar venta', 'danger');
+        }
+
+    } finally {
+        guardandoVenta = false;
+    }
 }
 
 // ─── Cerrar dropdowns al hacer click fuera ───────────────────────────────────

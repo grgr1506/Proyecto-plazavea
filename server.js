@@ -35,7 +35,12 @@ app.use(session({
   secret: 'plazavea-poo-2026',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 },
+  cookie: { 
+    maxAge: 8 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false  // true solo si usas HTTPS
+  },
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -211,7 +216,10 @@ app.get('/api/clientes', requireAuth, async (req, res) => {
       r.dni?.includes(q) || r.idcliente?.toLowerCase().includes(q)
     );
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { 
+    console.error('ERROR /api/clientes:', e); // <-- agrega esto
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
 app.post('/api/clientes', requireAuth, async (req, res) => {

@@ -29,7 +29,6 @@ class N_Compra extends BaseDAO {
           'CALL sp_guardar_detalle_compras(CAST($1 AS integer),$2,CAST($3 AS integer),CAST($4 AS numeric),CAST($5 AS numeric))',
           [idcompra, d.idproducto, d.cantidad, d.precio, d.total]
         );
-        await client.query('UPDATE productos SET cantidad=cantidad+$1 WHERE idproducto=$2', [d.cantidad, d.idproducto]);
       }
       await client.query('COMMIT');
       return idcompra;
